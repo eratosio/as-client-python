@@ -1,7 +1,10 @@
 
 import requests
 
-import json, os, tempfile, urlparse, zipfile
+import json, logging, os, tempfile, urlparse, zipfile
+
+logger = logging.getLogger(__name__)
+TRACE = 5
 
 class Error(Exception):
 	def __init__(self, message, statuscode):
@@ -24,6 +27,7 @@ class Client(object):
 	
 	def install_model(self, path, manifest=None):
 		if os.path.isdir(path):
+			logger.debug('Generating new model zip file from files at path %s', path)
 			with tempfile.TemporaryFile() as f:
 				with zipfile.ZipFile(f, 'w') as zip_file:
 					for root, dirs, files in os.walk(path):
@@ -40,6 +44,7 @@ class Client(object):
 				f.seek(0)
 				self._post_model_archive(f)
 		elif zipfile.is_zipfile(path):
+			logger.debug('Uploading model zip file %s', path)
 			with open(path, 'rb') as f:
 				self._post_model_archive(f)
 		else:
@@ -48,10 +53,11 @@ class Client(object):
 	
 	def _post_model_archive(self, zip_file):
 		url = urlparse.urljoin(self._base_url, '/models')
+		logger.debug(TRACE, 'Uploading new model to %s...', url)
 		files = { 'archive': ('model.zip', zip_file, 'application/zip', {}) }
 		
 		response = self._session.post(url=url, files=files)
-		print response.text
+		logger.log(TRACE, 'Response: %s', response.text)
 		
 		if 400 <= response.status_code < 500:
 			raise RequestError(**response.json())

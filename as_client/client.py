@@ -1,7 +1,7 @@
 
 import requests
 
-import json, logging, os, tempfile, urlparse, zipfile
+import json, logging, os, posixpath, tempfile, zipfile
 
 logger = logging.getLogger(__name__)
 TRACE = 5
@@ -19,13 +19,52 @@ class ServerError(Error):
 	pass
 
 class Client(object):
-	def __init__(self, base_url, auth):
+	"""
+	A client for the Analysis Services API.
+	
+	Attributes:
+		base_url (string, read only): The base URL of the API the client is
+			configured for.
+		
+		session (read_only): The underlying Requests session.
+	"""
+	
+	def __init__(self, base_url, auth=None):
+		"""
+		Initialise the client.
+		
+		Args:
+			base_url (string): The API's base URL
+			
+			auth (optional): the Python requests authoriser to use to authorise
+				the API requests.
+		"""
 		self._base_url = base_url
 		
 		self._session = requests.Session()
 		self._session.auth = auth
 	
 	def install_model(self, path, manifest=None):
+		"""
+		Install a new model.
+		
+		Args:
+			path (string): The path to the model files to install.
+				
+				The path may point either to a directory containing the files,
+				or to a ZIP file containing the files.
+
+			manifest (dict, optional): The model's manifest.
+			
+				If omitted, the given directory or ZIP file MUST contain a
+				manifest.json file containing the model's manifest.
+		
+		Raises:
+			RequestError: if an HTTP "client error" (4XX) status code is
+				returned by the server.
+			ServerError: if an HTTP "server error" (5XX) status code is returned
+				by the server.
+		"""
 		if os.path.isdir(path):
 			logger.debug('Generating new model zip file from files at path %s', path)
 			with tempfile.TemporaryFile() as f:
@@ -52,8 +91,8 @@ class Client(object):
 	
 	
 	def _post_model_archive(self, zip_file):
-		url = urlparse.urljoin(self._base_url, '/models')
-		logger.debug(TRACE, 'Uploading new model to %s...', url)
+		url = posixpath.join(self._base_url, 'models')
+		logger.debug('Uploading new model to %s...', url)
 		files = { 'archive': ('model.zip', zip_file, 'application/zip', {}) }
 		
 		response = self._session.post(url=url, files=files)
@@ -65,3 +104,11 @@ class Client(object):
 			raise ServerError(**response.json())
 		
 		print response # TODO: handle valid response
+	
+	@property
+	def base_url(self):
+		return self._base_url
+	
+	@property
+	def session(self):
+		return self._session

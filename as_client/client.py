@@ -7,10 +7,11 @@ logger = logging.getLogger(__name__)
 TRACE = 5
 
 class Error(Exception):
-	def __init__(self, message, statuscode):
+	def __init__(self, message=None, statuscode=None, **kwargs):
 		super(Error, self).__init__(message)
 		
 		self.status_code = statuscode
+		self.kwargs = kwargs
 
 class RequestError(Error):
 	pass

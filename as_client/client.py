@@ -3,10 +3,17 @@ import util
 
 import requests
 
-import json, logging, os, posixpath, tempfile, zipfile
+import json, logging, os, posixpath, tarfile, tempfile, time, zipfile
+from cStringIO import StringIO
 
 logger = logging.getLogger(__name__)
 TRACE = 5
+
+def _tarinfo_filter(tarinfo):
+    # Strip user info from files.
+    tarinfo.uid = tarinfo.gid = 0
+    tarinfo.uname = tarinfo.gname = 'root'
+    return tarinfo
 
 class Error(Exception):
     def __init__(self, message=None, statuscode=None, **kwargs):
@@ -55,12 +62,13 @@ class Client(object):
             path (string): The path to the model files to install.
                 
                 The path may point either to a directory containing the files,
-                or to a ZIP file containing the files.
+                to a ZIP file containing the files, or to a tar/gzip file
+                containing the files.
 
             manifest (dict, optional): The model's manifest.
             
-                If omitted, the given directory or ZIP file MUST contain a
-                manifest.json file containing the model's manifest.
+                If omitted, the given directory, ZIP file or tar/gzip file MUST
+                contain a manifest.json file containing the model's manifest.
         
         Raises:
             RequestError: if an HTTP "client error" (4XX) status code is
@@ -71,7 +79,7 @@ class Client(object):
         if os.path.isdir(path):
             logger.debug('Generating new model zip file from files at path %s', path)
             with tempfile.TemporaryFile() as f:
-                with zipfile.ZipFile(f, 'w') as zip_file:
+                with tarfile.open(fileobj=f, mode='w:gz') as tar_file:
                     for root, dirs, files in os.walk(path):
                         for file_ in files:
                             source_path = os.path.join(root, file_)
@@ -80,18 +88,26 @@ class Client(object):
                             
                             dest_path = os.path.relpath(source_path, path)
                             if manifest is None or dest_path != 'manifest.json':
-                                zip_file.write(source_path, arcname=dest_path)
+                                tar_file.add(source_path, arcname=dest_path, recursive=False, filter=_tarinfo_filter)
                     
                     if manifest is not None:
-                        zip_file.writestr('manifest.json', json.dumps(manifest))
+                        manifest = json.dumps(manifest)
+                        tarinfo = tarfile.TarInfo('manifest.json')
+                        tarinfo.size = len(manifest)
+                        tarinfo.uid = tarinfo.gid = 0
+                        tarinfo.uname = tarinfo.gname = 'root'
+                        tarinfo.mtime = time.time()
+                        tarinfo.mode = 0664
+                        tarinfo.type = tarfile.REGTYPE
+                        tar_file.addfile(tarinfo, StringIO(manifest))
                 
                 f.seek(0)
-                self._post_model_archive(f)
+                self._post_model_archive(f, 'model.tar.gz', 'application/gzip')
         elif zipfile.is_zipfile(path):
             logger.debug('Uploading model zip file %s', path)
             with open(path, 'rb') as f:
                 self._post_model_archive(f, 'model.zip', 'application/zip')
-        elif util.is_gz_file(path):
+        elif tarfile.is_tarfile(path):
             logger.debug('Uploading model tar/gzip file %s', path)
             with open(path, 'rb') as f:
                 self._post_model_archive(f, 'model.tar.gz', 'application/gzip')

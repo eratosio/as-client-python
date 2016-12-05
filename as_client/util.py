@@ -3,7 +3,7 @@ import os, warnings
 
 def is_gz_file(path):
 	# Test file extension.
-	path, ext = os.path.splitext(path)
+	dummy, ext = os.path.splitext(path)
 	if ext.lower() not in {'.gz', '.tgz'}:
 		return False
 	

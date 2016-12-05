@@ -1,5 +1,5 @@
 
-from util import path_is_hidden
+import util
 
 import requests
 
@@ -75,7 +75,7 @@ class Client(object):
                     for root, dirs, files in os.walk(path):
                         for file_ in files:
                             source_path = os.path.join(root, file_)
-                            if path_is_hidden(source_path): # ignore hidden files
+                            if util.path_is_hidden(source_path): # ignore hidden files
                                continue
                             
                             dest_path = os.path.relpath(source_path, path)
@@ -90,15 +90,19 @@ class Client(object):
         elif zipfile.is_zipfile(path):
             logger.debug('Uploading model zip file %s', path)
             with open(path, 'rb') as f:
-                self._post_model_archive(f)
+                self._post_model_archive(f, 'model.zip', 'application/zip')
+        elif util.is_gz_file(path):
+            logger.debug('Uploading model tar/gzip file %s', path)
+            with open(path, 'rb') as f:
+                self._post_model_archive(f, 'model.tar.gz', 'application/gzip')
         else:
-            raise ValueError('Path {} does not refer to a directory or zip file.'.format(path))
+            raise ValueError('Path {} does not refer to a directory, zip file or tar/gzip file.'.format(path))
     
     
-    def _post_model_archive(self, zip_file):
+    def _post_model_archive(self, archive_file, name, mime_type):
         url = posixpath.join(self._base_url, 'models')
         logger.debug('Uploading new model to %s...', url)
-        files = { 'archive': ('model.zip', zip_file, 'application/zip', {}) }
+        files = { 'archive': (name, archive_file, mime_type, {}) }
         
         response = self._session.post(url=url, files=files)
         logger.log(TRACE, 'Response: %s', response.text)

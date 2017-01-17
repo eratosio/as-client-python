@@ -101,9 +101,8 @@ class Client(object):
         else:
             raise ValueError('Path {} does not refer to a directory, zip file or tar/gzip file.'.format(path))
     
-    
     def _post_model_archive(self, archive_file, name, mime_type):
-        url = posixpath.join(self._base_url, 'models')
+        url = util.append_path_to_url(self._base_url, 'models')
         logger.debug('Uploading new model to %s...', url)
         files = { 'archive': (name, archive_file, mime_type, {}) }
         

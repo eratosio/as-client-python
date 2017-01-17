@@ -1,5 +1,5 @@
 
-import util
+import util, exceptions
 
 import requests
 
@@ -14,19 +14,6 @@ def _tarinfo_filter(tarinfo):
     tarinfo.uid = tarinfo.gid = 0
     tarinfo.uname = tarinfo.gname = 'root'
     return tarinfo
-
-class Error(Exception):
-    def __init__(self, message=None, statuscode=None, **kwargs):
-        super(Error, self).__init__(message)
-        
-        self.status_code = statuscode
-        self.kwargs = kwargs
-
-class RequestError(Error):
-    pass
-
-class ServerError(Error):
-    pass
 
 class Client(object):
     """
@@ -54,7 +41,7 @@ class Client(object):
         self._session = requests.Session()
         self._session.auth = auth
     
-    def install_model(self, path, manifest=None):
+    def install_model(self, path, manifest=None, include_hidden=False):
         """
         Install a new model.
         
@@ -71,19 +58,19 @@ class Client(object):
                 contain a manifest.json file containing the model's manifest.
         
         Raises:
-            RequestError: if an HTTP "client error" (4XX) status code is
-                returned by the server.
-            ServerError: if an HTTP "server error" (5XX) status code is returned
-                by the server.
+            exceptions.RequestError: if an HTTP "client error" (4XX) status code
+                is returned by the server.
+            exceptions.ServerError: if an HTTP "server error" (5XX) status code
+                is returned by the server.
         """
         if os.path.isdir(path):
-            logger.debug('Generating new model zip file from files at path %s', path)
+            logger.debug('Generating new model tar/gzip file from files at path %s', path)
             with tempfile.TemporaryFile() as f:
                 with tarfile.open(fileobj=f, mode='w:gz') as tar_file:
                     for root, dirs, files in os.walk(path):
                         for file_ in files:
                             source_path = os.path.join(root, file_)
-                            if util.path_is_hidden(source_path): # ignore hidden files
+                            if not include_hidden and util.path_is_hidden(source_path): # ignore hidden files
                                continue
                             
                             dest_path = os.path.relpath(source_path, path)
@@ -123,12 +110,15 @@ class Client(object):
         response = self._session.post(url=url, files=files)
         logger.log(TRACE, 'Response: %s', response.text)
         
-        if 400 <= response.status_code < 500:
-            raise RequestError(**response.json())
+        print self._check_response(response) # TODO: handle valid response
+    
+    def _check_response(self, response):
+		if 400 <= response.status_code < 500:
+            raise exceptions.RequestError(**response.json())
         elif 500 <= response.status_code:
-            raise ServerError(**response.json())
+            raise exceptions.ServerError(**response.json())
         
-        print response # TODO: handle valid response
+        return response.json()
     
     @property
     def base_url(self):

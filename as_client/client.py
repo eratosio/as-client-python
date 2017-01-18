@@ -42,15 +42,105 @@ class Client(object):
         self._session.auth = auth
     
     def get_base_image(self, id):
+        """
+        Get a specific base image by ID.
+        
+        Args:
+            id (string): The base image's ID.
+        
+        Returns:
+            An instance of as_client.BaseImage representing the given base image.
+        
+        Raises:
+            exceptions.RequestError: if an HTTP "client error" (4XX) status code
+                is returned by the server.
+            exceptions.ServerError: if an HTTP "server error" (5XX) status code
+                is returned by the server.
+        """
         return self._fetch_resource(model.BaseImage, id)
     
     def get_base_images(self, skip=None, limit=None, page_size=None):
+        """
+        Get a list of existing base images.
+        
+        This method supports either retrieving a specific subset of the existing
+        base images (using the "skip" and "limit" parameters), or retrieving the
+        entire set of existing base images.
+        
+        If retrieving the entire set of base images, the request is
+        automatically and transparently paginated. The page size when doing so
+        can be controlled using the "page_size" parameter.
+        
+        Args:
+            skip (integer, optional): The number of base images to skip at the
+                start of the list.
+            
+            limit (integer, optional): The maximum number of base images to
+                return.
+            
+            page_size (integer, optional): Automatically paginate the request
+                with pages of this size.
+        
+        Returns:
+            A sequence of as_model.BaseImage instances.
+        
+        Raises:
+            exceptions.RequestError: if an HTTP "client error" (4XX) status code
+                is returned by the server.
+            exceptions.ServerError: if an HTTP "server error" (5XX) status code
+                is returned by the server.
+        """
         return self._get_resources(model.BaseImage, skip, limit, page_size)
     
     def get_model(self, id):
+        """
+        Get a specific model by ID.
+        
+        Args:
+            id (string): The model's ID.
+        
+        Returns:
+            An instance of as_client.Model representing the given model.
+        
+        Raises:
+            exceptions.RequestError: if an HTTP "client error" (4XX) status code
+                is returned by the server.
+            exceptions.ServerError: if an HTTP "server error" (5XX) status code
+                is returned by the server.
+        """
         return self._fetch_resource(model.Model, id)
     
     def get_models(self, skip=None, limit=None, page_size=None):
+        """
+        Get a list of existing models.
+        
+        This method supports either retrieving a specific subset of the existing
+        models (using the "skip" and "limit" parameters), or retrieving the
+        entire set of existing models.
+        
+        If retrieving the entire set of models, the request is automatically
+        and transparently paginated. The page size when doing so can be
+        controlled using the "page_size" parameter.
+        
+        Args:
+            skip (integer, optional): The number of models to skip at the
+                start of the list.
+            
+            limit (integer, optional): The maximum number of models to
+                return.
+            
+            page_size (integer, optional): Automatically paginate the request
+                with pages of this size.
+        
+        Returns:
+            A sequence of as_model.Model instances.
+        
+        Raises:
+            exceptions.RequestError: if an HTTP "client error" (4XX) status code
+                is returned by the server.
+            exceptions.ServerError: if an HTTP "server error" (5XX) status code
+                is returned by the server.
+        """
         return self._get_resources(model.Model, skip, limit, page_size)
     
     def install_model(self, path, manifest=None, include_hidden=False):
@@ -114,9 +204,54 @@ class Client(object):
             raise ValueError('Path {} does not refer to a directory, zip file or tar/gzip file.'.format(path))
     
     def get_workflow(self, id):
+        """
+        Get a specific workflow by ID.
+        
+        Args:
+            id (string): The workflow's ID.
+        
+        Returns:
+            An instance of as_client.Workflow representing the given workflow.
+        
+        Raises:
+            exceptions.RequestError: if an HTTP "client error" (4XX) status code
+                is returned by the server.
+            exceptions.ServerError: if an HTTP "server error" (5XX) status code
+                is returned by the server.
+        """
         return self._fetch_resource(model.Workflow, id)
     
     def get_workflows(self, skip=None, limit=None, page_size=None):
+        """
+        Get a list of existing workflows.
+        
+        This method supports either retrieving a specific subset of the existing
+        workflows (using the "skip" and "limit" parameters), or retrieving the
+        entire set of existing workflows.
+        
+        If retrieving the entire set of workflows, the request is automatically
+        and transparently paginated. The page size when doing so can be
+        controlled using the "page_size" parameter.
+        
+        Args:
+            skip (integer, optional): The number of workflows to skip at the
+                start of the list.
+            
+            limit (integer, optional): The maximum number of workflows to
+                return.
+            
+            page_size (integer, optional): Automatically paginate the request
+                with pages of this size.
+        
+        Returns:
+            A sequence of as_model.Workflow instances.
+        
+        Raises:
+            exceptions.RequestError: if an HTTP "client error" (4XX) status code
+                is returned by the server.
+            exceptions.ServerError: if an HTTP "server error" (5XX) status code
+                is returned by the server.
+        """
         return self._get_resources(model.Workflow, skip, limit, page_size)
     
     def post_workflow(self, workflow):

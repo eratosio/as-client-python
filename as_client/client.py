@@ -1,5 +1,5 @@
 
-import util, exceptions
+import exceptions, model, util
 
 import requests
 
@@ -40,6 +40,18 @@ class Client(object):
         
         self._session = requests.Session()
         self._session.auth = auth
+    
+    def get_base_image(self, id):
+        return self._fetch_resource(model.BaseImage, id)
+    
+    def get_base_images(self, skip=None, limit=None, page_size=None):
+        return self._get_resources(model.BaseImage, skip, limit, page_size)
+    
+    def get_model(self, id):
+        return self._fetch_resource(model.Model, id)
+    
+    def get_models(self, skip=None, limit=None, page_size=None):
+        return self._get_resources(model.Model, skip, limit, page_size)
     
     def install_model(self, path, manifest=None, include_hidden=False):
         """
@@ -101,6 +113,50 @@ class Client(object):
         else:
             raise ValueError('Path {} does not refer to a directory, zip file or tar/gzip file.'.format(path))
     
+    def get_workflow(self, id):
+        return self._fetch_resource(model.Workflow, id)
+    
+    def get_workflows(self, skip=None, limit=None, page_size=None):
+        return self._get_resources(model.Workflow, skip, limit, page_size)
+    
+    def post_workflow(self, workflow):
+        pass # TODO
+    
+    def run_workflow(self, id):
+        pass # TODO
+    
+    def _fetch_resource(self, type_, id_, instance=None):
+        assert hasattr(type_, '_url_path')
+        assert callable(getattr(type_, '_update', None))
+        
+        url = util.append_path_to_url(self._base_url, type_._url_path, id_)
+        json = self._check_response(self._session.get(url=url))
+        
+        if instance is None:
+            instance = type_()
+        
+        return instance._update(self, json)
+    
+    def _get_resources(self, type_, skip, limit, page_size):
+        assert hasattr(type_, '_url_path')
+        assert hasattr(type_, '_collection')
+        assert callable(getattr(type_, '_update', None))
+        
+        if skip is None and limit is None:
+            return model._ResourceCollection(self, type_, page_size)
+        elif page_size is not None:
+            raise ValueError('The "page_size" parameter cannot be used if the "skip" or "limit" parameters are used.')
+        else:
+            query = { 'skip': skip, 'limit': limit }
+            
+            url = util.append_path_to_url(self._base_url, type_._url_path)
+            json = self._check_response(self._session.get(url=url, params=query))
+            
+            return model._ResourceList(self, type_, json)
+    
+    """def _post_resource(self, ...):
+        pass"""
+    
     def _post_model_archive(self, archive_file, name, mime_type):
         url = util.append_path_to_url(self._base_url, 'models')
         logger.debug('Uploading new model to %s...', url)
@@ -112,7 +168,7 @@ class Client(object):
         print self._check_response(response) # TODO: handle valid response
     
     def _check_response(self, response):
-		if 400 <= response.status_code < 500:
+        if 400 <= response.status_code < 500:
             raise exceptions.RequestError(**response.json())
         elif 500 <= response.status_code:
             raise exceptions.ServerError(**response.json())

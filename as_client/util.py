@@ -24,7 +24,7 @@ else:
 		warnings.warn('path_is_hidden() is not specialised for OS "{}" - all files will be considered non-hidden')
 		return False
 
-def append_path_to_url(url, path):
+def append_path_to_url(url, *args):
 	parts = list(urlparse.urlparse(url))
-	parts[2] = posixpath.join(parts[2], path)
+	parts[2] = posixpath.join(parts[2], *args)
 	return urlparse.urlunparse(parts)

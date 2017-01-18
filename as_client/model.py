@@ -266,6 +266,15 @@ class Model(_Resource):
     group_ids = _Property('groupids', set, set())
     ports = _EmbeddedProperty('ports', lambda v: [Port(p) for p in v], [])
 
+class ModelInstallationResult(_Resource):
+    """
+    Representation of the response of a POST request to the API's /models
+    endpoint.
+    """
+    def __init__(self, client, json):
+        self.image_size = json.get('imagesize', None)
+        self.models = [Model()._update(client, m) for m in json.get('_embedded', {}).get('models', [])]
+
 class Port(object):
     """
     Representation of the "port" type used in the "model" type's "ports"

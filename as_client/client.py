@@ -191,15 +191,15 @@ class Client(object):
                         tar_file.addfile(tarinfo, StringIO(manifest))
                 
                 f.seek(0)
-                self._post_model_archive(f, 'model.tar.gz', 'application/gzip')
+                return self._post_model_archive(f, 'model.tar.gz', 'application/gzip')
         elif zipfile.is_zipfile(path):
             logger.debug('Uploading model zip file %s', path)
             with open(path, 'rb') as f:
-                self._post_model_archive(f, 'model.zip', 'application/zip')
+                return self._post_model_archive(f, 'model.zip', 'application/zip')
         elif tarfile.is_tarfile(path):
             logger.debug('Uploading model tar/gzip file %s', path)
             with open(path, 'rb') as f:
-                self._post_model_archive(f, 'model.tar.gz', 'application/gzip')
+                return self._post_model_archive(f, 'model.tar.gz', 'application/gzip')
         else:
             raise ValueError('Path {} does not refer to a directory, zip file or tar/gzip file.'.format(path))
     
@@ -300,7 +300,7 @@ class Client(object):
         response = self._session.post(url=url, files=files)
         logger.log(TRACE, 'Response: %s', response.text)
         
-        print self._check_response(response) # TODO: handle valid response
+        return model.ModelInstallationResult(self, self._check_response(response))
     
     def _check_response(self, response):
         if 400 <= response.status_code < 500:

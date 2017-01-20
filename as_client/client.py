@@ -112,7 +112,7 @@ class Client(object):
         print self._check_response(response) # TODO: handle valid response
     
     def _check_response(self, response):
-		if 400 <= response.status_code < 500:
+        if 400 <= response.status_code < 500:
             raise exceptions.RequestError(**response.json())
         elif 500 <= response.status_code:
             raise exceptions.ServerError(**response.json())

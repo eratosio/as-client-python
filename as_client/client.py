@@ -255,10 +255,37 @@ class Client(object):
         return self._get_resources(model.Workflow, skip, limit, page_size)
     
     def post_workflow(self, workflow):
-        pass # TODO
+        """
+        
+        """
+        return self._post_resource(workflow)
     
-    def run_workflow(self, id):
-        pass # TODO
+    def run_workflow(self, workflow, debug=False):
+        """
+        
+        """
+        debug = { True: 'true', False: 'false' }.get(debug, None)
+        params = { 'debug': debug }
+        
+        # If passed a Workflow instance...
+        if isinstance(workflow, model.Workflow):
+            # ... attempt to run it if it has a known ID ...
+            if workflow.id is not None:
+                url = util.append_path_to_url(self._base_url, 'workflows', workflow.id, 'results')
+                response = self._session.get(url=url, params=params)
+            
+            # ...otherwise, if ID is unknown or workflow doesn't exist, create it.
+            if workflow.id is None or response.status_code == 404:
+                workflow = self.post_workflow(workflow).id
+        
+        # If by this point "workflow" is an ID string (not a Workflow instance),
+        # either by being passed in a such or as retrieved when creating the
+        # workflow, run the workflow with the given ID.
+        if isinstance(workflow, (str, basestring)):
+            url = util.append_path_to_url(self._base_url, 'workflows', workflow, 'results')
+            response = self._session.get(url=url, params=params)
+        
+        return model.WorkflowResults(self, self._check_response(response))
     
     def _fetch_resource(self, type_, id_, instance=None):
         assert hasattr(type_, '_url_path')
@@ -289,8 +316,16 @@ class Client(object):
             
             return model._ResourceList(self, type_, json)
     
-    """def _post_resource(self, ...):
-        pass"""
+    def _post_resource(self, resource):
+        assert hasattr(resource.__class__, '_url_path')
+        assert callable(getattr(resource, '_serialise', None))
+        
+        json = resource._serialise(include_id=False)
+        url = util.append_path_to_url(self._base_url, resource.__class__._url_path)
+        
+        json = self._check_response(self._session.post(url=url, json=json))
+        
+        return resource._update(self, json)
     
     def _post_model_archive(self, archive_file, name, mime_type):
         url = util.append_path_to_url(self._base_url, 'models')
@@ -304,9 +339,9 @@ class Client(object):
     
     def _check_response(self, response):
         if 400 <= response.status_code < 500:
-            raise exceptions.RequestError(**response.json())
+            raise exceptions.RequestError(response, **response.json())
         elif 500 <= response.status_code:
-            raise exceptions.ServerError(**response.json())
+            raise exceptions.ServerError(response, **response.json())
         
         return response.json()
     

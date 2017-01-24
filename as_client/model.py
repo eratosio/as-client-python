@@ -22,9 +22,10 @@ class _Property(object):
     retrieved previously, and tracking changes made to the attribute's value on
     the client side (where permitted).
     """
-    def __init__(self, json_name, from_json=lambda v:v, default=None, writable=False):
+    def __init__(self, json_name, from_json=lambda v:v, to_json=lambda v:v, default=None, writable=False):
         self.json_name = json_name
         self.from_json = from_json
+        self.to_json = to_json
         self.default = default
         self.writable = writable
     
@@ -43,7 +44,12 @@ class _Property(object):
         return data.local_value
     
     def __set__(self, instance, value):
-        # TODO: check writable flag
+        if not self.writable:
+            cls = instance.__class__
+            descriptors = inspect.getmembers(cls, lambda m: m is self)
+            assert len(descriptors) == 1
+            
+            raise AttributeError('Property "{}" of class "{}" is not writable.'.format(descriptors[0][0], cls.__name__))
         
         self.get_data(instance).local_value = value
     
@@ -61,6 +67,11 @@ class _Property(object):
     def _update(self, instance, json):
         if self.json_name in json:
             self.get_data(instance)._remote_value = self.from_json(json[self.json_name])
+    
+    def _serialise(self, instance, json):
+        local_value = self.get_data(instance).local_value
+        if local_value is not _UNKNOWN:
+            json[self.json_name] = self.to_json(local_value)
 
 class _IdProperty(_Property):
     """
@@ -92,6 +103,11 @@ class _EmbeddedProperty(_Property):
         
         if self.json_name in json:
             self.get_data(instance)._remote_value = self.from_json(json[self.json_name])
+    
+    """def _serialise(self, instance, json):
+        local_value = self.get_data(instance).local_value
+        if local_value is not _UNKNOWN:
+            json.setdefault('_embedded', {})[self.json_name] = self.to_json(local_value)"""
 
 class _PropertyData(object):
     """
@@ -131,8 +147,9 @@ class _Resource(object):
     """
     Base class for all the client's "resource" classes.
     
-    Does very little, except for provide an algorithm for updating a resource's
-    property values when given a JSON object describing the resource.
+    This class does very little, other than providing an algorithm for updating
+    a resource's property values when given a JSON object describing the
+    resource.
     """
     def _update(self, client, json):
         self._client = client
@@ -141,6 +158,17 @@ class _Resource(object):
             prop._update(self, json)
         
         return self
+    
+    def _serialise(self, include_id=True):
+        result = {}
+        
+        for prop_id, prop in inspect.getmembers(self.__class__, lambda m: isinstance(m, _Property)):
+            if not include_id and isinstance(prop, _IdProperty):
+                continue
+            
+            prop._serialise(self, result)
+        
+        return result
 
 class _ResourceList(collections.Sequence):
     """
@@ -238,18 +266,9 @@ class BaseImage(_Resource):
     model_root = _Property('modelroot')
     model_user = _Property('modeluser')
     entrypoint_template = _Property('entrypointtemplate')
-    supported_providers = _Property('supportedproviders', set, set())
-    host_environment = _Property('hostenvironment', lambda v: HostEnvironment(v))
-    tags = _Property('tags', set, set())
-
-class HostEnvironment(object):
-    """
-    Representation of the "host environment" type used in the "base image"
-    type's "hostenvironment" property.
-    """
-    def __init__(self, json):
-        self.architecture = json.get('architecture', None)
-        self.operating_system = json.get('operatingsystem', None)
+    supported_providers = _Property('supportedproviders', set, list, set())
+    host_environment = _Property('hostenvironment', lambda v: HostEnvironment(v), lambda v: v._serialise())
+    tags = _Property('tags', set, list, set())
 
 class Model(_Resource):
     """
@@ -263,29 +282,8 @@ class Model(_Resource):
     version = _Property('version')
     description = _Property('description')
     organisation_id = _Property('organisationid')
-    group_ids = _Property('groupids', set, set())
-    ports = _EmbeddedProperty('ports', lambda v: [Port(p) for p in v], [])
-
-class ModelInstallationResult(_Resource):
-    """
-    Representation of the response of a POST request to the API's /models
-    endpoint.
-    """
-    def __init__(self, client, json):
-        self.image_size = json.get('imagesize', None)
-        self.models = [Model()._update(client, m) for m in json.get('_embedded', {}).get('models', [])]
-
-class Port(object):
-    """
-    Representation of the "port" type used in the "model" type's "ports"
-    property.
-    """
-    def __init__(self, json):
-        self.name = json.get('portname', None)
-        self.required = json.get('required', False)
-        self.type = json.get('type', None)
-        self.description = json.get('description', None)
-        self.direction = json.get('direction', None)
+    group_ids = _Property('groupids', set, list, set())
+    ports = _EmbeddedProperty('ports', lambda v: [Port(p) for p in v], lambda v: [p._serialise() for p in v], [])
 
 class Workflow(_Resource):
     """
@@ -299,12 +297,77 @@ class Workflow(_Resource):
     description = _Property('description')
     model_id = _Property('modelid')
     organisation_id = _Property('organisationid')
-    group_ids = _Property('groupids', set, set())
-    ports = _EmbeddedProperty('ports', lambda v: [WorkflowPort(p) for p in v], [])
+    group_ids = _Property('groupids', set, list, set())
+    ports = _EmbeddedProperty('ports', lambda v: [WorkflowPort._deserialise(p) for p in v], lambda v: [p._serialise() for p in v], [])
+    
+    def run(self, debug=False, client=None):
+        if client is not None:
+            self._client = client
+        
+        if self._client is None:
+            raise ValueError('Cannot run workflow: no associated client.')
+        
+        return self._client.run_workflow(self, debug)
 
-class WorkflowPort(object):
+################################################################################
+# Pseudo-resource classes.                                                     #
+################################################################################
+
+# NOTE: like the "real" resource classes, these classes represent the top-level
+# response object returned by one (or more) of the API's endpoints. Where they
+# differ from the real resource classes is that these represent transient
+# entities. 
+
+class ModelInstallationResult(_Resource):
     """
-    Representation of the "port" type used in the "workflow" type's "ports"
+    Representation of the response of a POST request to the API's /models
+    endpoint.
+    """
+    def __init__(self, client, json):
+        self.image_size = json.get('imagesize', None)
+        self.models = [Model()._update(client, m) for m in json.get('_embedded', {}).get('models', [])]
+
+class WorkflowResults(object):
+    def __init__(self, client, json):
+        self._client = client
+        
+        self.id = json.get('id', None)
+        self.workflow_id = json.get('workflowid', None)
+        
+        embedded = json.get('_embedded', {})
+        self.statistics = WorkflowStatistics(self, embedded.get('statistics', {}))
+        self.ports = [WorkflowPort._deserialise(p) for p in embedded.get('ports', {})]
+    
+    def _serialise(self):
+        return {
+            'id': self.id,
+            'workflowId': self.workflow_id,
+            'statistics': self.statistics._serialise(),
+            'ports': [p._serialise() for p in self.ports]
+        }
+
+################################################################################
+# Resource component classes.                                                  #
+################################################################################
+
+class HostEnvironment(object):
+    """
+    Representation of the "host environment" type used in the "base image"
+    type's "hostenvironment" property.
+    """
+    def __init__(self, json):
+        self.architecture = json.get('architecture', None)
+        self.operating_system = json.get('operatingsystem', None)
+    
+    def _serialise(self):
+        return {
+            'architecture': self.architecture,
+            'operatingsystem': self.operating_system
+        }
+
+class Port(object):
+    """
+    Representation of the "port" type used in the "model" type's "ports"
     property.
     """
     def __init__(self, json):
@@ -313,5 +376,176 @@ class WorkflowPort(object):
         self.type = json.get('type', None)
         self.description = json.get('description', None)
         self.direction = json.get('direction', None)
+    
+    def _serialise(self):
+        return {
+            'portname': self.name,
+            'required': self.required,
+            'type': self.type,
+            'description': self.description,
+            'direction': self.direction
+        }
+
+class DataNode(object):
+    def __init__(self, port, json):
+        self._port = port
         
-        # TODO: handle embedded datanodes.
+        self.id = json.get('id', None)
+        self.type = json.get('type', None)
+        self.organisation_id = json.get('organisationid', None)
+        self.group_ids = set(json.get('groupids', []))
+
+class DocumentNode(DataNode):
+    def __init__(self, port, json):
+        super(DocumentNode, self).__init__(port, json)
+        
+        self.value = json.get('value', None)
+    
+    def _serialise(self):
+        return { 'value': self.value } if self.value else { 'id': self.id }
+
+class StreamNode(DataNode):
+    def __init__(self, port, json):
+        super(StreamNode, self).__init__(port, json)
+        
+        self.stream_id = json.get('streamid', None)
+    
+    def _serialise(self):
+        return { 'streamid': self.stream_id } if self.stream_id else { 'id': self.id }
+
+class MultistreamNode(DataNode):
+    def __init__(self, port, json):
+        super(MultistreamNode, self).__init__(port, json)
+        
+        self.stream_ids = set(json.get('streamids', []))
+    
+    def _serialise(self):
+        return { 'streamids': list(self.stream_ids) } if self.stream_ids else { 'id': self.id }
+
+class WorkflowPort(object):
+    """
+    Representation of the "port" type used in the "workflow" type's "ports"
+    property.
+    """
+    def _serialise(self):
+        return {
+            'portname': self.name,
+            'datanode': self.datanode._serialise()
+        }
+    
+    @staticmethod
+    def _deserialise(json):
+        try:
+            typename = json['type']
+        except KeyError:
+            raise ValueError('Invalid workflow port: "type" not specified.')
+        
+        matching_types = [p for p in WorkflowPort.__subclasses__() if p._type == typename.lower()]
+        if not matching_types:
+            raise ValueError('Unknown workflow port type "{}".'.format(typename))
+        
+        assert len(matching_types) == 1
+        type_ = matching_types[0]
+        
+        result = type_()
+        result.name = json.get('portname', None)
+        result.required = json.get('required', False)
+        result.type = json.get('type', None)
+        result.description = json.get('description', None)
+        result.direction = json.get('direction', None)
+        result.datanode = type_._datanode_type(result, json.get('_embedded', {}).get('datanode', {}))
+        
+        return result
+
+class DocumentWorkflowPort(WorkflowPort):
+    _type = 'document'
+    _datanode_type = DocumentNode
+    
+    @property
+    def value(self):
+        return self.datanode.value
+    
+    @value.setter
+    def value(self, new_value):
+        self.datanode.value = new_value
+
+class StreamWorkflowPort(WorkflowPort):
+    _type = 'stream'
+    _datanode_type = StreamNode
+    
+    @property
+    def stream_id(self):
+        return self.datanode.stream_id
+    
+    @stream_id.setter
+    def stream_id(self, new_stream_id):
+        self.datanode.stream_id = new_stream_id
+
+class MultistreamWorkflowPort(WorkflowPort):
+    _type = 'multistream'
+    _datanode_type = MultistreamNode
+    
+    @property
+    def stream_ids(self):
+        return self.datanode.stream_ids
+    
+    @stream_ids.setter
+    def stream_ids(self, new_stream_ids):
+        self.datanode.stream_ids = new_stream_ids
+
+class WorkflowStatistics(object):
+    def __init__(self, results, json):
+        self._results = results
+        
+        self.start_time = json.get('starttime', None)
+        self.end_time = json.get('endtime', None)
+        self.status = json.get('status', None)
+        self.elapsed_time = json.get('elapsedtime', None)
+        self.errors = json.get('errors', [])
+        self.log = [LogEntry(self, l) for l in json.get('log', [])]
+        self.output = [OutputEntry(self, l) for l in json.get('output', [])]
+    
+    def _serialise(self):
+        return {
+            'startTime': self.start_time,
+            'endTime': self.end_time,
+            'status': self.status,
+            'elapsedTime': self.elapsed_time,
+            'errors': self.errors,
+            'log': [entry._serialise() for entry in self.log],
+            'output': [entry._serialise() for entry in self.output]
+        }
+
+class LogEntry(object):
+    def __init__(self, statistics, json):
+        self._statistics = statistics
+        
+        self.message = json.get('message', None)
+        self.timestamp = json.get('timestamp', None)
+        self.level = json.get('level', None)
+        self.file = json.get('file', None)
+        self.line = json.get('line', None)
+        self.logger = json.get('logger', None)
+    
+    def _serialise(self):
+        return {
+            'message': self.message,
+            'timestamp': self.timestamp,
+            'level': self.level,
+            'file': self.file,
+            'line': self.line,
+            'logger': self.logger
+        }
+
+class OutputEntry(object):
+    def __init__(self, statistics, json):
+        self._statistics = statistics
+        
+        self.stream = json.get('stream', None)
+        self.content = json.get('content', None)
+    
+    def _serialise(self):
+        return {
+            'stream': self.stream,
+            'content': self.content
+        }

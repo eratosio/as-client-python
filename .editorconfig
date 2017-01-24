@@ -1,5 +1,5 @@
 
-root = true
+# EditorConfig file (see http://editorconfig.org/).
 
 [*.py]
 indent_style = space

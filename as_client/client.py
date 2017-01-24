@@ -20,10 +20,8 @@ class Client(object):
     A client for the Analysis Services API.
     
     Attributes:
-        base_url (string, read only): The base URL of the API the client is
-            configured for.
-        
-        session (read_only): The underlying Requests session.
+        base_url: The "base URL" of the API instance the client is connected to.
+        session: The underlying Python requests' "session" object.
     """
     
     def __init__(self, base_url, auth=None):
@@ -31,10 +29,8 @@ class Client(object):
         Initialise the client.
         
         Args:
-            base_url (string): The API's base URL
-            
-            auth (optional): the Python requests authoriser to use to authorise
-                the API requests.
+            base_url:   The API's base URL
+            auth:       The Python requests authoriser to use to authorise the API requests.
         """
         self._base_url = base_url
         
@@ -46,16 +42,14 @@ class Client(object):
         Get a specific base image by ID.
         
         Args:
-            id (string): The base image's ID.
+            id: The base image's ID.
         
         Returns:
             An instance of as_client.BaseImage representing the given base image.
         
         Raises:
-            exceptions.RequestError: if an HTTP "client error" (4XX) status code
-                is returned by the server.
-            exceptions.ServerError: if an HTTP "server error" (5XX) status code
-                is returned by the server.
+            as_client.RequestError: If an HTTP "client error" (4XX) status code is returned by the server.
+            as_client.ServerError: If an HTTP "server error" (5XX) status code is returned by the server.
         """
         return self._fetch_resource(model.BaseImage, id)
     
@@ -72,23 +66,19 @@ class Client(object):
         can be controlled using the "page_size" parameter.
         
         Args:
-            skip (integer, optional): The number of base images to skip at the
-                start of the list.
-            
-            limit (integer, optional): The maximum number of base images to
-                return.
-            
-            page_size (integer, optional): Automatically paginate the request
-                with pages of this size.
+            skip: The number of base images to skip at the start of the list.
+            limit: The maximum number of base images to return.
+            page_size: Automatically paginate the request, and ensure individual
+                requests return pages at most this size.
         
         Returns:
             A sequence of as_model.BaseImage instances.
         
         Raises:
-            exceptions.RequestError: if an HTTP "client error" (4XX) status code
-                is returned by the server.
-            exceptions.ServerError: if an HTTP "server error" (5XX) status code
-                is returned by the server.
+            RequestError: if an HTTP "client error" (4XX) status code is
+                returned by the server.
+            ServerError: if an HTTP "server error" (5XX) status code is returned
+                by the server.
         """
         return self._get_resources(model.BaseImage, skip, limit, page_size)
     
@@ -97,16 +87,16 @@ class Client(object):
         Get a specific model by ID.
         
         Args:
-            id (string): The model's ID.
+            id: The model's ID.
         
         Returns:
             An instance of as_client.Model representing the given model.
         
         Raises:
-            exceptions.RequestError: if an HTTP "client error" (4XX) status code
-                is returned by the server.
-            exceptions.ServerError: if an HTTP "server error" (5XX) status code
-                is returned by the server.
+            RequestError: if an HTTP "client error" (4XX) status code is
+                returned by the server.
+            ServerError: if an HTTP "server error" (5XX) status code is returned
+                by the server.
         """
         return self._fetch_resource(model.Model, id)
     
@@ -123,23 +113,19 @@ class Client(object):
         controlled using the "page_size" parameter.
         
         Args:
-            skip (integer, optional): The number of models to skip at the
-                start of the list.
-            
-            limit (integer, optional): The maximum number of models to
-                return.
-            
-            page_size (integer, optional): Automatically paginate the request
-                with pages of this size.
+            skip: The number of base images to skip at the start of the list.
+            limit: The maximum number of base images to return.
+            page_size: Automatically paginate the request, and ensure individual
+                requests return pages at most this size.
         
         Returns:
             A sequence of as_model.Model instances.
         
         Raises:
-            exceptions.RequestError: if an HTTP "client error" (4XX) status code
-                is returned by the server.
-            exceptions.ServerError: if an HTTP "server error" (5XX) status code
-                is returned by the server.
+            RequestError: if an HTTP "client error" (4XX) status code is
+                returned by the server.
+            ServerError: if an HTTP "server error" (5XX) status code is returned
+                by the server.
         """
         return self._get_resources(model.Model, skip, limit, page_size)
     
@@ -148,22 +134,20 @@ class Client(object):
         Install a new model.
         
         Args:
-            path (string): The path to the model files to install.
-                
+            path: The path to the model files to install.\n
                 The path may point either to a directory containing the files,
                 to a ZIP file containing the files, or to a tar/gzip file
                 containing the files.
 
-            manifest (dict, optional): The model's manifest.
-            
+            manifest: The model's manifest.\n
                 If omitted, the given directory, ZIP file or tar/gzip file MUST
                 contain a manifest.json file containing the model's manifest.
         
         Raises:
-            exceptions.RequestError: if an HTTP "client error" (4XX) status code
-                is returned by the server.
-            exceptions.ServerError: if an HTTP "server error" (5XX) status code
-                is returned by the server.
+            RequestError: if an HTTP "client error" (4XX) status code is
+                returned by the server.
+            ServerError: if an HTTP "server error" (5XX) status code is returned
+                by the server.
         """
         if os.path.isdir(path):
             logger.debug('Generating new model tar/gzip file from files at path %s', path)
@@ -214,10 +198,10 @@ class Client(object):
             An instance of as_client.Workflow representing the given workflow.
         
         Raises:
-            exceptions.RequestError: if an HTTP "client error" (4XX) status code
-                is returned by the server.
-            exceptions.ServerError: if an HTTP "server error" (5XX) status code
-                is returned by the server.
+            RequestError: if an HTTP "client error" (4XX) status code is
+                returned by the server.
+            ServerError: if an HTTP "server error" (5XX) status code is returned
+                by the server.
         """
         return self._fetch_resource(model.Workflow, id)
     
@@ -234,35 +218,67 @@ class Client(object):
         controlled using the "page_size" parameter.
         
         Args:
-            skip (integer, optional): The number of workflows to skip at the
-                start of the list.
-            
-            limit (integer, optional): The maximum number of workflows to
-                return.
-            
-            page_size (integer, optional): Automatically paginate the request
-                with pages of this size.
+            skip: The number of base images to skip at the start of the list.
+            limit: The maximum number of base images to return.
+            page_size: Automatically paginate the request, and ensure individual
+                requests return pages at most this size.
         
         Returns:
             A sequence of as_model.Workflow instances.
         
         Raises:
-            exceptions.RequestError: if an HTTP "client error" (4XX) status code
-                is returned by the server.
-            exceptions.ServerError: if an HTTP "server error" (5XX) status code
-                is returned by the server.
+            RequestError: if an HTTP "client error" (4XX) status code is
+                returned by the server.
+            ServerError: if an HTTP "server error" (5XX) status code is returned
+                by the server.
         """
         return self._get_resources(model.Workflow, skip, limit, page_size)
     
     def post_workflow(self, workflow):
         """
+        Post a new workflow to the analysis service.
         
+        Args:
+            workflow: An instance of the Workflow class to be posted to the
+                analysis service.
+        
+        Returns:
+            The same worfklow instance, updated with any new properties
+            generated by the analysis service.
+        
+        Raises:
+            RequestError: if an HTTP "client error" (4XX) status code is
+                returned by the server.
+            ServerError: if an HTTP "server error" (5XX) status code is returned
+                by the server.
         """
         return self._post_resource(workflow)
     
     def run_workflow(self, workflow, debug=False):
         """
+        Requests synchronous execution of a workflow.
         
+        The workflow to be executed may be specified either with a string ID, or
+        as an instance of the Workflow class. If a Workflow instance is given,
+        an attempt is made to first find a matching workflow to execute. If no
+        existing workflow is found, a new one is generated then executed.
+        
+        Args:
+            workflow: The ID of the workflow to execute, or a Workflow instance
+                describing the workflow to execute.
+            debug: If true, the workflow is run in "debug" mode (which causes
+                additional log messages and output data to be returned in the
+                response).
+        
+        Returns:
+            An instance of WorkflowResult representing the results of executing
+            the workflow.
+        
+        Raises:
+            RequestError: if an HTTP "client error" (4XX) status code is
+                returned by the server.
+            ServerError: if an HTTP "server error" (5XX) status code is returned
+                by the server.
         """
         debug = { True: 'true', False: 'false' }.get(debug, None)
         params = { 'debug': debug }
@@ -345,10 +361,5 @@ class Client(object):
         
         return response.json()
     
-    @property
-    def base_url(self):
-        return self._base_url
-    
-    @property
-    def session(self):
-        return self._session
+    base_url = property(lambda self: self._base_url)
+    session = property(lambda self: self._session)

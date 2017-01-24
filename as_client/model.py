@@ -38,7 +38,7 @@ class _Property(object):
         if data.needs_fetch:
             id_ = getattr(instance, 'id', None)
             client = getattr(instance, '_client', None)
-            if None not in (id, client):
+            if None not in (id_, client):
                 client._fetch_resource(owner, id_, instance)
         
         return data.local_value
@@ -284,6 +284,19 @@ class Model(_Resource):
     organisation_id = _Property('organisationid')
     group_ids = _Property('groupids', set, list, set())
     ports = _EmbeddedProperty('ports', lambda v: [Port(p) for p in v], lambda v: [p._serialise() for p in v], [])
+    
+    def new_workflow(self):
+        result = Workflow()
+        result._client = self._client
+        
+        result.name = '{} Workflow'.format(self.name)
+        result.description = '{} workflow'.format(self.name)
+        result.model_id = self.id
+        result.organisation_id = self.organisation_id
+        result.group_ids = set(self.group_ids)
+        result.ports = [WorkflowPort._deserialise(p._serialise()) for p in self.ports]
+        
+        return result
 
 class Workflow(_Resource):
     """
@@ -293,12 +306,34 @@ class Workflow(_Resource):
     _collection = 'workflows'
     
     id = _IdProperty('id')
-    name = _Property('name')
-    description = _Property('description')
-    model_id = _Property('modelid')
-    organisation_id = _Property('organisationid')
-    group_ids = _Property('groupids', set, list, set())
-    ports = _EmbeddedProperty('ports', lambda v: [WorkflowPort._deserialise(p) for p in v], lambda v: [p._serialise() for p in v], [])
+    name = _Property('name', writable=True)
+    description = _Property('description', writable=True)
+    model_id = _Property('modelid', writable=True)
+    organisation_id = _Property('organisationid', writable=True)
+    group_ids = _Property('groupids', set, list, set(), writable=True)
+    ports = _EmbeddedProperty('ports', lambda v: [WorkflowPort._deserialise(p) for p in v], lambda v: [p._serialise() for p in v], [], writable=True)
+    
+    def save(self, client=None):
+        if client is not None:
+            self._client = client
+        
+        if self._client is None:
+            raise ValueError('Cannot run workflow: no associated client.')
+        
+        return self._client.post_workflow(self)
+    
+    def clone(self):
+        result = Workflow()
+        result._client = self._client
+        
+        result.name = self.name
+        result.description = self.description
+        result.model_id = self.model_id
+        result.organisation_id = self.organisation_id
+        result.group_ids = set(self.group_ids)
+        result.ports = list(self.ports)
+        
+        return result
     
     def run(self, debug=False, client=None):
         if client is not None:

@@ -21,14 +21,12 @@ command to install doxypypy (for Unix-like systems):
 
     sudo pip install doxypypy
 
-The project's Doxyfile assumes the doxypypy filter can be called without having
-to provide any additional command-line options. Unfortunately, do so with a
-standard doxypypy installation will omit several important options. The easiest
-way to resolve the issue is to add a new command alias that automatically adds
-the required options - for example, for systems using the "bash" shell (e.g.
-Ubuntu), adding the following line to `~/.bashrc` will fix the problem:
-
-    alias doxypypy='doxypypy -a -c'
+Unfortunately, Doxygen assumes that filters can be called without supplying any
+command-line parameters except for the path of the file to filter.
+Unfortunately, doing so with a standard doxypypy installation will omit several
+important options. The Doxyfile included with this project addresses this by
+instead calling a simple wrapper script `doxypypy.sh` that is included as part
+of the project.
 
 ## Generating Documentation
 

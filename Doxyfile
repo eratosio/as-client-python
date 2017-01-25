@@ -132,7 +132,7 @@ INLINE_INHERITED_MEMB  = NO
 # shortest path that makes the file name unique will be used
 # The default value is: YES.
 
-FULL_PATH_NAMES        = YES
+FULL_PATH_NAMES        = NO
 
 # The STRIP_FROM_PATH tag can be used to strip a user-defined part of the path.
 # Stripping is only done if one of the specified strings matches the left-hand
@@ -494,7 +494,7 @@ CASE_SENSE_NAMES       = YES
 # scope will be hidden.
 # The default value is: NO.
 
-HIDE_SCOPE_NAMES       = NO
+HIDE_SCOPE_NAMES       = YES
 
 # If the SHOW_INCLUDE_FILES tag is set to YES then doxygen will put a list of
 # the files that are included by a file in the documentation of that file.
@@ -638,7 +638,7 @@ SHOW_FILES             = YES
 # Folder Tree View (if specified).
 # The default value is: YES.
 
-SHOW_NAMESPACES        = YES
+SHOW_NAMESPACES        = NO
 
 # The FILE_VERSION_FILTER tag can be used to specify a program or script that
 # doxygen should invoke to get the current version for each file (typically from
@@ -743,7 +743,7 @@ WARN_LOGFILE           =
 # spaces.
 # Note: If this tag is empty the current directory is searched.
 
-INPUT                  =
+INPUT                  = as_client
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding. Doxygen uses
@@ -778,7 +778,8 @@ RECURSIVE              = YES
 # Note that relative paths are relative to the directory from which doxygen is
 # run.
 
-EXCLUDE                =
+EXCLUDE                = as_client/__main__.py as_client/util.py \
+	as_client/version.py
 
 # The EXCLUDE_SYMLINKS tag can be used to select whether or not files or
 # directories that are symbolic links (a Unix file system feature) are excluded
@@ -805,7 +806,9 @@ EXCLUDE_PATTERNS       =
 # Note that the wildcards are matched against the file with absolute path, so to
 # exclude all test directories use the pattern */test/*
 
-EXCLUDE_SYMBOLS        =
+# TODO: there's gotta be a better way to do this.
+EXCLUDE_SYMBOLS        = _EmbeddedProperty _IdProperty _Property _PropertyData \
+	_Resource _ResourceCollection _ResourceList _DataNode _WorkflowPort
 
 # The EXAMPLE_PATH tag can be used to specify one or more files or directories
 # that contain example code fragments that are included (see the \include
@@ -857,7 +860,7 @@ INPUT_FILTER           =
 # filters are used. If the FILTER_PATTERNS tag is empty or if none of the
 # patterns match the file name, INPUT_FILTER is applied.
 
-FILTER_PATTERNS        = *.py=doxypypy
+FILTER_PATTERNS        = *.py=./doxypypy.sh
 
 # If the FILTER_SOURCE_FILES tag is set to YES, the input filter (if set using
 # INPUT_FILTER ) will also be used to filter the input files that are used for

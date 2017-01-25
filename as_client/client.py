@@ -134,15 +134,15 @@ class Client(object):
         Install a new model.
         
         Args:
-            path: The path to the model files to install.\n
-                The path may point either to a directory containing the files,
-                to a ZIP file containing the files, or to a tar/gzip file
-                containing the files.
-
-            manifest: The model's manifest.\n
-                If omitted, the given directory, ZIP file or tar/gzip file MUST
-                contain a manifest.json file containing the model's manifest.
-        
+            path: The path to the model files to install. The path may point
+                either to a directory containing the files, to a ZIP file
+                containing the files, or to a tar/gzip file containing the files.
+            manifest: The model's manifest. If omitted, the given directory, ZIP
+                file or tar/gzip file MUST contain a manifest.json file
+                containing the model's manifest.
+            include_hidden: If True and "path" points to a directory, then
+                hidden files within that directory are included as part of the
+                model. Otherwise, they are ignored.
         Raises:
             RequestError: if an HTTP "client error" (4XX) status code is
                 returned by the server.

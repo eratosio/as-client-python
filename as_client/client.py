@@ -3,7 +3,7 @@ import exceptions, model, util
 
 import requests
 
-import json, logging, os, posixpath, tarfile, tempfile, time, zipfile
+import collections, json, logging, os, posixpath, tarfile, tempfile, time, zipfile
 from cStringIO import StringIO
 
 logger = logging.getLogger(__name__)
@@ -100,7 +100,7 @@ class Client(object):
         """
         return self._fetch_resource(model.Model, id)
     
-    def get_models(self, skip=None, limit=None, page_size=None):
+    def get_models(self, skip=None, limit=None, page_size=None, group_ids=None):
         """
         Get a list of existing models.
         
@@ -127,7 +127,7 @@ class Client(object):
             ServerError: if an HTTP "server error" (5XX) status code is returned
                 by the server.
         """
-        return self._get_resources(model.Model, skip, limit, page_size)
+        return self._get_resources(model.Model, skip, limit, page_size, groupids=group_ids)
     
     def install_model(self, path, manifest=None, include_hidden=False):
         """
@@ -315,7 +315,7 @@ class Client(object):
         
         return instance._update(self, json)
     
-    def _get_resources(self, type_, skip, limit, page_size):
+    def _get_resources(self, type_, skip, limit, page_size, **kwargs):
         assert hasattr(type_, '_url_path')
         assert hasattr(type_, '_collection')
         assert callable(getattr(type_, '_update', None))
@@ -326,6 +326,12 @@ class Client(object):
             raise ValueError('The "page_size" parameter cannot be used if the "skip" or "limit" parameters are used.')
         else:
             query = { 'skip': skip, 'limit': limit }
+            
+            for k,v in kwargs.iteritems():
+                if isinstance(v, collections.Sequence) and not isinstance(v, (str, basestring)):
+                    query[k] = ','.join(str(sv) for sv in v)
+                elif v is not None:
+                    query[k] = str(v)
             
             url = util.append_path_to_url(self._base_url, type_._url_path)
             json = self._check_response(self._session.get(url=url, params=query))

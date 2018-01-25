@@ -320,7 +320,7 @@ class Client(object):
         assert hasattr(type_, '_collection')
         assert callable(getattr(type_, '_update', None))
         
-        if skip is None and limit is None:
+        if skip is None and limit is None and not kwargs:
             return model._ResourceCollection(self, type_, page_size)
         elif page_size is not None:
             raise ValueError('The "page_size" parameter cannot be used if the "skip" or "limit" parameters are used.')

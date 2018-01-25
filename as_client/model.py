@@ -182,10 +182,10 @@ class _ResourceList(collections.Sequence):
         self._type = type_
         
         self._items = [type_()._update(client, v) for v in json.get('_embedded', {}).get(type_._collection, [])]
-        self._skip = json.get('skip', None)
-        self._limit = json.get('limit', None)
-        self._count = json.get('count', None)
-        self._total_count = json.get('totalcount', None)
+        self._skip = json.get('skip')
+        self._limit = json.get('limit')
+        self._count = json.get('count')
+        self._total_count = json.get('totalcount')
     
     def __getitem__(self, index):
         return self._items[index]
@@ -247,6 +247,303 @@ class _ResourceCollection(collections.Sequence):
     
     def _is_item_loaded(self, index):
         return (self._items is not None) and (self._items[index] is not _UNKNOWN)
+
+################################################################################
+# Resource component classes.                                                  #
+################################################################################
+
+class HostEnvironment(object):
+    """
+    Representation of the "host environment" type used in the "base image"
+    type's "hostenvironment" property.
+    
+    Attributes:
+        architecture: A string describing the host's CPU architecture (e.g. "X86_32", "X86_64").
+        operating_system: A string describing the host's operating system (e.g. LINUX, WINDOWS, MAC_OS).
+    """
+    def __init__(self, json):
+        self.architecture = json.get('architecture')
+        self.operating_system = json.get('operatingsystem')
+    
+    def _serialise(self):
+        return {
+            'architecture': self.architecture,
+            'operatingsystem': self.operating_system
+        }
+
+class Graph(object):
+    """
+    
+    """
+    def __init__(self, json={}):
+        nodes = [_GraphNode._deserialise(v) for v in json.get('nodes', [])]
+        nodes = { n.id: n for n in nodes }
+        self.nodes = list(nodes.itervalues())
+        
+        self.connections = [
+            GraphConnection(
+                nodes[c['source']['node']],
+                nodes[c['target']['node']],
+                c['source'].get('port'),
+                c['target'].get('port')
+            ) for c in json.get('connections', [])
+        ]
+    
+    def clone(self):
+        result = Graph()
+        
+        result.nodes = self.nodes.copy()
+        result.connections = list(self.connections)
+        
+        return result
+    
+    def _serialise(self):
+        return {
+            'nodes': [n._serialise() for n in self.nodes],
+            'connections': [c._serialise() for c in self.connections]
+        }
+
+class _GraphNode(object):
+    def __init__(self, id):
+        self.id = id
+    
+    def _serialise(self):
+        return { 'id': self.id }
+    
+    @staticmethod
+    def _deserialise(json):
+        if 'modelid' in json:
+            return ModelNode._deserialise(json)
+        elif 'documentid' in json or 'value' in json:
+            return DocumentNode._deserialise(json)
+        elif 'streamid' in json:
+            return StreamNode._deserialise(json)
+        elif 'streamids' in json:
+            return MultiStreamNode._deserialise(json)
+        elif 'dataset' in json:
+            return GridNode._deserialise(json)
+
+class ModelNode(_GraphNode):
+    def __init__(self, id, model_id):
+        super(ModelNode, self).__init__(id)
+        
+        self.model_id = model_id
+    
+    def _serialise(self):
+        return dict(super(ModelNode, self)._serialise(), modelid=self.model_id)
+    
+    @staticmethod
+    def _deserialise(json):
+        return ModelNode(json['id'], json['modelid'])
+
+class DocumentNode(_GraphNode):
+    def __init__(self, id, value=None, document_id=None):
+        super(DocumentNode, self).__init__(id)
+        
+        if (value is None) and (document_id is None):
+            raise ValueError('At least one of the value or document ID may be specified.')
+        
+        self.value = value
+        self.document_id = document_id
+    
+    def _serialise(self):
+        result = super(DocumentNode, self)._serialise()
+        if self.value is not None:
+            result['value'] = self.value
+        if self.document_id is not None:
+            result['documentid'] = self.document_id
+        return result
+    
+    @staticmethod
+    def _deserialise(json):
+        return DocumentNode(json['id'], json.get('_embedded', {}).get('datanode', {}).get('value'), json.get('documentid'))
+
+class StreamNode(_GraphNode):
+    def __init__(self, id, stream_id):
+        super(StreamNode, self).__init__(id)
+        
+        self.stream_id = stream_id
+    
+    def _serialise(self):
+        return dict(super(StreamNode, self)._serialise(), streamid=self.stream_id)
+    
+    @staticmethod
+    def _deserialise(json):
+        return StreamNode(json['id'], json['streamid'])
+
+class MultiStreamNode(_GraphNode):
+    def __init__(self, id, stream_ids):
+        super(MultiStreamNode, self).__init__(id)
+        
+        self.stream_ids = stream_ids
+    
+    def _serialise(self):
+        return dict(super(MultiStreamNode, self)._serialise(), streamids=self.stream_ids)
+    
+    @staticmethod
+    def _deserialise(json):
+        return MultiStreamNode(json['id'], json['streamids'])
+
+class GridNode(_GraphNode):
+    def __init__(self, id, dataset, catalog=None):
+        super(GridNode, self).__init__(id)
+        
+        self.catalog = catalog
+        self.dataset = dataset
+    
+    def _serialise(self):
+        result = super(GridNode, self)._serialise()
+        result['dataset'] = self.dataset
+        if self.catalog is not None:
+            result['catalog'] = self.catalog
+        return result
+    
+    @staticmethod
+    def _deserialise(json):
+        return GridNode(json['id'], json['dataset'], json.get('catalog'))
+
+class GraphConnection(object):
+    def __init__(self, source_node, target_node, source_port=None, target_port=None):
+        self._source_node = source_node
+        self._target_node = target_node
+        
+        if isinstance(source_node, ModelNode) == (source_port is None):
+            raise ValueError('The source_port must be specified if (and only if) source_node is a ModelNode.')
+        if isinstance(target_node, ModelNode) == (target_port is None):
+            raise ValueError('The target_port must be specified if (and only if) target_node is a ModelNode.')
+        
+        self._source_port = source_port
+        self._target_port = target_port
+    
+    def _serialise(self):
+        source = { 'node': self._source_node.id }
+        if self._source_port is not None:
+            source['port'] = self._source_port
+        
+        target = { 'node': self._target_node.id }
+        if self._target_port is not None:
+            target['port'] = self._target_port
+        
+        return { 'source': source, 'target': target }
+
+class Port(object):
+    """
+    Representation of the "port" type used in the "model" type's "ports"
+    property.
+    
+    Attributes:
+        name: The port's name.
+        required: True if a value must be supplied for the port when executing the model, otherwise False.
+        type: The port's type (e.g. "stream", "multistream" or "document").
+        description: A description of the port.
+        direction: The port's direction (i.e. either "input" or "output").
+    """
+    def __init__(self, json):
+        self.name = json.get('portname')
+        self.required = json.get('required', False)
+        self.type = json.get('type')
+        self.description = json.get('description')
+        self.direction = json.get('direction')
+    
+    def _serialise(self):
+        return {
+            'portname': self.name,
+            'required': self.required,
+            'type': self.type,
+            'description': self.description,
+            'direction': self.direction
+        }
+
+class WorkflowStatistics(object):
+    """
+    Representation of the execution statistics generated by running a workflow.
+    
+    Attributes:
+        start_time: The time at which the workflow execution started, as an ISO-8601 timestamp.
+        end_time: The time at which the workflow execution ended, as an ISO-8601 timestamp.
+        status: The final status of the workflow.
+        elapsed_time: The total time elapsed, as an ISO-8601 duration.
+        errors: A list of error messages (if any were generated).
+        log: A list of LogEntry instances, representing data captured by the internal logging frameworks.
+        output: A list of OutputEntry instances, representing the console output generated by the executed model (if any).
+    """
+    def __init__(self, results, json):
+        self._results = results
+        
+        self.start_time = json.get('starttime')
+        self.end_time = json.get('endtime')
+        self.status = json.get('status')
+        self.elapsed_time = json.get('elapsedtime')
+        self.errors = json.get('errors', [])
+        self.log = [LogEntry(self, l) for l in json.get('log', [])]
+        self.output = [OutputEntry(self, l) for l in json.get('output', [])]
+    
+    def _serialise(self):
+        return {
+            'startTime': self.start_time,
+            'endTime': self.end_time,
+            'status': self.status,
+            'elapsedTime': self.elapsed_time,
+            'errors': self.errors,
+            'log': [entry._serialise() for entry in self.log],
+            'output': [entry._serialise() for entry in self.output]
+        }
+
+class LogEntry(object):
+    """
+    Represents a log entry, as captured by the model execution framework's
+    execution logging system.
+    
+    For Python-based models, these correspond to messages captured by the
+    standard Python logging framework.
+    
+    Attributes:
+        message: The log message.
+        timestamp: The time at which the log message was generated, as an IS0-8601 timestamp.
+        level: The message's severity level (i.e. "DEBUG", "INFO", "WARNING", "ERROR" or "CRITICAL").
+        file: The filename of the file that generated the message (if known).
+        line: The line number at which the message was generated (if known).
+        logger: The ID of the logger which generated the message (if known).
+    """
+    def __init__(self, statistics, json):
+        self._statistics = statistics
+        
+        self.message = json.get('message')
+        self.timestamp = json.get('timestamp')
+        self.level = json.get('level')
+        self.file = json.get('file')
+        self.line = json.get('line')
+        self.logger = json.get('logger')
+    
+    def _serialise(self):
+        return {
+            'message': self.message,
+            'timestamp': self.timestamp,
+            'level': self.level,
+            'file': self.file,
+            'line': self.line,
+            'logger': self.logger
+        }
+
+class OutputEntry(object):
+    """
+    Represents an instance of console output from an executed model.
+    
+    Attributes:
+        stream: The stream on which output occurred (i.e. "STDOUT" or "STDERR").
+        content: The text that was output.
+    """
+    def __init__(self, statistics, json):
+        self._statistics = statistics
+        
+        self.stream = json.get('stream')
+        self.content = json.get('content')
+    
+    def _serialise(self):
+        return {
+            'stream': self.stream,
+            'content': self.content
+        }
 
 ################################################################################
 # Resource classes.                                                            #
@@ -351,10 +648,9 @@ class Workflow(_Resource):
     id = _IdProperty('id')
     name = _Property('name', writable=True)
     description = _Property('description', writable=True)
-    model_id = _Property('modelid', writable=True)
     organisation_id = _Property('organisationid', writable=True)
     group_ids = _Property('groupids', set, list, set(), writable=True)
-    ports = _EmbeddedProperty('ports', lambda v: [WorkflowPort._deserialise(p) for p in v], lambda v: [p._serialise() for p in v], [], writable=True)
+    graph = _EmbeddedProperty('graph', lambda v: Graph(v), lambda v: v._serialise(), Graph())
     
     def save(self, client=None):
         """
@@ -407,10 +703,9 @@ class Workflow(_Resource):
         
         result.name = self.name
         result.description = self.description
-        result.model_id = self.model_id
         result.organisation_id = self.organisation_id
         result.group_ids = set(self.group_ids)
-        result.ports = list(self.ports)
+        result.graph = self.graph.clone()
         
         return result
     
@@ -469,7 +764,7 @@ class ModelInstallationResult(_Resource):
         models: A list of Model instances describing the newly installed model(s) (there may be more than one).
     """
     def __init__(self, client, json):
-        self.image_size = json.get('imagesize', None)
+        self.image_size = json.get('imagesize')
         self.models = [Model()._update(client, m) for m in json.get('_embedded', {}).get('models', [])]
 
 class WorkflowResults(object):
@@ -485,8 +780,8 @@ class WorkflowResults(object):
     def __init__(self, client, json):
         self._client = client
         
-        self.id = json.get('id', None)
-        self.workflow_id = json.get('workflowid', None)
+        self.id = json.get('id')
+        self.workflow_id = json.get('workflowid')
         
         embedded = json.get('_embedded', {})
         self.statistics = WorkflowStatistics(self, embedded.get('statistics', {}))
@@ -498,330 +793,4 @@ class WorkflowResults(object):
             'workflowId': self.workflow_id,
             'statistics': self.statistics._serialise(),
             'ports': [p._serialise() for p in self.ports]
-        }
-
-################################################################################
-# Resource component classes.                                                  #
-################################################################################
-
-class HostEnvironment(object):
-    """
-    Representation of the "host environment" type used in the "base image"
-    type's "hostenvironment" property.
-    
-    Attributes:
-        architecture: A string describing the host's CPU architecture (e.g. "X86_32", "X86_64").
-        operating_system: A string describing the host's operating system (e.g. LINUX, WINDOWS, MAC_OS).
-    """
-    def __init__(self, json):
-        self.architecture = json.get('architecture', None)
-        self.operating_system = json.get('operatingsystem', None)
-    
-    def _serialise(self):
-        return {
-            'architecture': self.architecture,
-            'operatingsystem': self.operating_system
-        }
-
-class Port(object):
-    """
-    Representation of the "port" type used in the "model" type's "ports"
-    property.
-    
-    Attributes:
-        name: The port's name.
-        required: True if a value must be supplied for the port when executing the model, otherwise False.
-        type: The port's type (e.g. "stream", "multistream" or "document").
-        description: A description of the port.
-        direction: The port's direction (i.e. either "input" or "output").
-    """
-    def __init__(self, json):
-        self.name = json.get('portname', None)
-        self.required = json.get('required', False)
-        self.type = json.get('type', None)
-        self.description = json.get('description', None)
-        self.direction = json.get('direction', None)
-    
-    def _serialise(self):
-        return {
-            'portname': self.name,
-            'required': self.required,
-            'type': self.type,
-            'description': self.description,
-            'direction': self.direction
-        }
-
-class _DataNode(object):
-    """
-    Base class for classes representing "data nodes". See classes DocumentNode,
-    StreamNode and MultistreamNode for concrete implementations.
-    
-    Attributes:
-        id: The data node's unique ID.
-        type: The data node's type (e.g. "stream", "multistream" or "document").
-        organisation_id: The ID of the organisation that "owns" the data node.
-        group_ids: A set containing the IDs of the group(s) that contain the data node (if any).
-    """
-    def __init__(self, port, json):
-        self._port = port
-        
-        self.id = json.get('id', None)
-        self.type = json.get('type', None)
-        self.organisation_id = json.get('organisationid', None)
-        self.group_ids = set(json.get('groupids', []))
-
-class DocumentNode(_DataNode):
-    """
-    Representation of a "document" type data node.
-    
-    These data nodes are used to describe plain-text documents as inputs or
-    outputs of models.
-    
-    Attributes:
-        id: The data node's unique ID.
-        type: The data node's type (i.e. "document").
-        organisation_id: The ID of the organisation that "owns" the data node.
-        group_ids: A set containing the IDs of the group(s) that contain the data node (if any).
-        value: The textual content of the document node's document.
-    """
-    def __init__(self, port, json):
-        super(DocumentNode, self).__init__(port, json)
-        
-        self.value = json.get('value', None)
-    
-    def _serialise(self):
-        return { 'value': self.value } if self.value else { 'id': self.id }
-
-class StreamNode(_DataNode):
-    """
-    Representation of a "stream" type data node.
-    
-    These data nodes are used to associate a specific SensorCloud data stream to
-    an input or output of a model.
-    
-    Attributes:
-        id: The data node's unique ID.
-        type: The data node's type (i.e. "stream").
-        organisation_id: The ID of the organisation that "owns" the data node.
-        group_ids: A set containing the IDs of the group(s) that contain the data node (if any).
-        stream_id: The ID of the SensorCloud stream that is associated with the data node.
-    """
-    def __init__(self, port, json):
-        super(StreamNode, self).__init__(port, json)
-        
-        self.stream_id = json.get('streamid', None)
-    
-    def _serialise(self):
-        return { 'streamid': self.stream_id } if self.stream_id else { 'id': self.id }
-
-class MultistreamNode(_DataNode):
-    """
-    Representation of a "multistream" type data node.
-    
-    These data nodes are used to associate a set of SensorCloud data streams
-    (i.e an unordered group of unique data stream IDs) to an input or output of
-    a model.
-    
-    Attributes:
-        id: The data node's unique ID.
-        type: The data node's type (i.e. "multistream").
-        organisation_id: The ID of the organisation that "owns" the data node.
-        group_ids: A set containing the IDs of the group(s) that contain the data node (if any).
-        stream_ids: The set of IDs of the SensorCloud streams that are associated with the data node.
-    """
-    def __init__(self, port, json):
-        super(MultistreamNode, self).__init__(port, json)
-        
-        self.stream_ids = set(json.get('streamids', []))
-    
-    def _serialise(self):
-        return { 'streamids': list(self.stream_ids) } if self.stream_ids else { 'id': self.id }
-
-class _WorkflowPort(object):
-    """
-    Base class for classes representing workflow port mappings. See classes
-    DocumentWorkflowPort, StreamWorkflowPort and MultistreamWorkflowPort for
-    concrete implementations.
-    
-    Attributes:
-        name: The port's name.
-        required: True if a value must be supplied for the port when executing the model, otherwise False.
-        type: The port's type (e.g. "stream", "multistream" or "document").
-        description: A description of the port.
-        direction: The port's direction (i.e. either "input" or "output").
-        datanode: An instance of _DataNode describing the data node assicated with the port.
-    """
-    def _serialise(self):
-        return {
-            'portname': self.name,
-            'datanode': self.datanode._serialise()
-        }
-    
-    @staticmethod
-    def _deserialise(json):
-        try:
-            typename = json['type']
-        except KeyError:
-            raise ValueError('Invalid workflow port: "type" not specified.')
-        
-        matching_types = [p for p in WorkflowPort.__subclasses__() if p._type == typename.lower()]
-        if not matching_types:
-            raise ValueError('Unknown workflow port type "{}".'.format(typename))
-        
-        assert len(matching_types) == 1
-        type_ = matching_types[0]
-        
-        result = type_()
-        result.name = json.get('portname', None)
-        result.required = json.get('required', False)
-        result.type = json.get('type', None)
-        result.description = json.get('description', None)
-        result.direction = json.get('direction', None)
-        result.datanode = type_._datanode_type(result, json.get('_embedded', {}).get('datanode', {}))
-        
-        return result
-
-class DocumentWorkflowPort(_WorkflowPort):
-    """
-    Representation of a "document" type workflow port.
-    
-    Attributes:
-        name: The port's name.
-        required: True if a value must be supplied for the port when executing the model, otherwise False.
-        type: The port's type (i.e. "document").
-        description: A description of the port.
-        direction: The port's direction (i.e. either "input" or "output").
-        datanode: An instance of DocumentNode describing the document associated with the port.
-        value: The textual content of the document node's document.
-    """
-    _type = 'document'
-    _datanode_type = DocumentNode
-    
-    value = property(lambda self: self.datanode.value, lambda self, value: setattr(self.datanode, 'value', value))
-
-class StreamWorkflowPort(_WorkflowPort):
-    """
-    Representation of a "stream" type workflow port.
-    
-    Attributes:
-        name: The port's name.
-        required: True if a value must be supplied for the port when executing the model, otherwise False.
-        type: The port's type (i.e. "stream").
-        description: A description of the port.
-        direction: The port's direction (i.e. either "input" or "output").
-        datanode: An instance of StreamNode describing the stream associated with the port.
-        stream_id: The ID of the SensorCloud stream that is associated with the data node.
-    """
-    _type = 'stream'
-    _datanode_type = StreamNode
-    
-    stream_id = property(lambda self: self.datanode.stream_id, lambda self, value: setattr(self.datanode, 'stream_id', value))
-
-class MultistreamWorkflowPort(_WorkflowPort):
-    """
-    Representation of a "multistream" type workflow port.
-    
-    Attributes:
-        name: The port's name.
-        required: True if a value must be supplied for the port when executing the model, otherwise False.
-        type: The port's type (i.e. "multistream").
-        description: A description of the port.
-        direction: The port's direction (i.e. either "input" or "output").
-        datanode: An instance of MultistreamNode describing the streams associated with the port.
-        stream_ids: The set of IDs of the SensorCloud streams that are associated with the data node.
-    """
-    _type = 'multistream'
-    _datanode_type = MultistreamNode
-    
-    stream_ids = property(lambda self: self.datanode.stream_ids, lambda self, value: setattr(self.datanode, 'stream_ids', value))
-
-class WorkflowStatistics(object):
-    """
-    Representation of the execution statistics generated by running a workflow.
-    
-    Attributes:
-        start_time: The time at which the workflow execution started, as an ISO-8601 timestamp.
-        end_time: The time at which the workflow execution ended, as an ISO-8601 timestamp.
-        status: The final status of the workflow.
-        elapsed_time: The total time elapsed, as an ISO-8601 duration.
-        errors: A list of error messages (if any were generated).
-        log: A list of LogEntry instances, representing data captured by the internal logging frameworks.
-        output: A list of OutputEntry instances, representing the console output generated by the executed model (if any).
-    """
-    def __init__(self, results, json):
-        self._results = results
-        
-        self.start_time = json.get('starttime', None)
-        self.end_time = json.get('endtime', None)
-        self.status = json.get('status', None)
-        self.elapsed_time = json.get('elapsedtime', None)
-        self.errors = json.get('errors', [])
-        self.log = [LogEntry(self, l) for l in json.get('log', [])]
-        self.output = [OutputEntry(self, l) for l in json.get('output', [])]
-    
-    def _serialise(self):
-        return {
-            'startTime': self.start_time,
-            'endTime': self.end_time,
-            'status': self.status,
-            'elapsedTime': self.elapsed_time,
-            'errors': self.errors,
-            'log': [entry._serialise() for entry in self.log],
-            'output': [entry._serialise() for entry in self.output]
-        }
-
-class LogEntry(object):
-    """
-    Represents a log entry, as captured by the model execution framework's
-    execution logging system.
-    
-    For Python-based models, these correspond to messages captured by the
-    standard Python logging framework.
-    
-    Attributes:
-        message: The log message.
-        timestamp: The time at which the log message was generated, as an IS0-8601 timestamp.
-        level: The message's severity level (i.e. "DEBUG", "INFO", "WARNING", "ERROR" or "CRITICAL").
-        file: The filename of the file that generated the message (if known).
-        line: The line number at which the message was generated (if known).
-        logger: The ID of the logger which generated the message (if known).
-    """
-    def __init__(self, statistics, json):
-        self._statistics = statistics
-        
-        self.message = json.get('message', None)
-        self.timestamp = json.get('timestamp', None)
-        self.level = json.get('level', None)
-        self.file = json.get('file', None)
-        self.line = json.get('line', None)
-        self.logger = json.get('logger', None)
-    
-    def _serialise(self):
-        return {
-            'message': self.message,
-            'timestamp': self.timestamp,
-            'level': self.level,
-            'file': self.file,
-            'line': self.line,
-            'logger': self.logger
-        }
-
-class OutputEntry(object):
-    """
-    Represents an instance of console output from an executed model.
-    
-    Attributes:
-        stream: The stream on which output occurred (i.e. "STDOUT" or "STDERR").
-        content: The text that was output.
-    """
-    def __init__(self, statistics, json):
-        self._statistics = statistics
-        
-        self.stream = json.get('stream', None)
-        self.content = json.get('content', None)
-    
-    def _serialise(self):
-        return {
-            'stream': self.stream,
-            'content': self.content
         }

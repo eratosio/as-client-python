@@ -51,7 +51,7 @@ class Client(object):
             as_client.RequestError: If an HTTP "client error" (4XX) status code is returned by the server.
             as_client.ServerError: If an HTTP "server error" (5XX) status code is returned by the server.
         """
-        return self._fetch_resource(model.BaseImage, id)
+        return self._fetch_resource(id, model.BaseImage)
     
     def get_base_images(self, skip=None, limit=None, page_size=None):
         """
@@ -98,7 +98,7 @@ class Client(object):
             ServerError: if an HTTP "server error" (5XX) status code is returned
                 by the server.
         """
-        return self._fetch_resource(model.Model, id)
+        return self._fetch_resource(id, model.Model)
     
     def get_models(self, skip=None, limit=None, page_size=None, group_ids=None):
         """
@@ -203,7 +203,7 @@ class Client(object):
             ServerError: if an HTTP "server error" (5XX) status code is returned
                 by the server.
         """
-        return self._fetch_resource(model.Workflow, id)
+        return self._fetch_resource(id, model.Workflow)
     
     def get_workflows(self, skip=None, limit=None, page_size=None):
         """
@@ -303,16 +303,52 @@ class Client(object):
         
         return model.WorkflowResults(self, self._check_response(response))
     
-    def _fetch_resource(self, type_, id_, instance=None):
+    def create_job(self, workflow, debug=False):
+        """
+        Create a workflow execution job.
+        
+        Args:
+            workflow: The ID of the workflow to execute, or a Workflow instance
+                describing the workflow to execute.
+            debug: If true, the workflow is run in "debug" mode (which causes
+                additional log messages and output data to be returned in the
+                response).
+        
+        Returns:
+            An new instance of the Job class.
+        
+        Raises:
+            RequestError: if an HTTP "client error" (4XX) status code is
+                returned by the server.
+            ServerError: if an HTTP "server error" (5XX) status code is returned
+                by the server.
+        """
+        if isinstance(workflow, model.Workflow) and workflow.id is None:
+            workflow = self.post_workflow(workflow)
+        if isinstance(workflow, model.Workflow):
+            workflow = workflow.id
+        
+        return self._post_resource(model.Job(workflow, debug))
+    
+    def get_job(self, job):
+        return self._fetch_resource(job, model.Job)
+    
+    def _fetch_resource(self, resource, type_=None):
+        updating = not isinstance(resource, (str,basestring))
+        
+        assert updating or type_ is not None
+        
+        if updating:
+            type_ = type(resource)
+        
         assert hasattr(type_, '_url_path')
         assert callable(getattr(type_, '_update', None))
         
+        id_ = resource.id if updating else resource
         url = util.append_path_to_url(self._base_url, type_._url_path, id_)
         json = self._check_response(self._session.get(url=url))
         
-        if instance is None:
-            instance = type_()
-        
+        instance = resource if updating else type_()
         return instance._update(self, json)
     
     def _get_resources(self, type_, skip, limit, page_size, **kwargs):
@@ -339,7 +375,7 @@ class Client(object):
             return model._ResourceList(self, type_, json)
     
     def _post_resource(self, resource):
-        assert hasattr(resource.__class__, '_url_path')
+        assert hasattr(type(resource), '_url_path')
         assert callable(getattr(resource, '_serialise', None))
         
         json = resource._serialise(include_id=False)

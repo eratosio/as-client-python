@@ -1,5 +1,5 @@
 
-from __future__ import division
+from __future__ import division, print_function
 
 import collections, inspect
 
@@ -22,12 +22,13 @@ class _Property(object):
     retrieved previously, and tracking changes made to the attribute's value on
     the client side (where permitted).
     """
-    def __init__(self, json_name, from_json=lambda v:v, to_json=lambda v:v, default=None, writable=False):
+    def __init__(self, json_name, from_json=lambda v:v, to_json=lambda v:v, default=None, writable=False, serialize=True):
         self.json_name = json_name
         self.from_json = from_json
         self.to_json = to_json
         self.default = default
         self.writable = writable
+        self.serialize = serialize
     
     def __get__(self, instance, owner):
         if instance is None:
@@ -39,7 +40,7 @@ class _Property(object):
             id_ = getattr(instance, 'id', None)
             client = getattr(instance, '_client', None)
             if None not in (id_, client):
-                client._fetch_resource(owner, id_, instance)
+                client._fetch_resource(instance, owner)
         
         return data.local_value
     
@@ -69,6 +70,9 @@ class _Property(object):
             self.get_data(instance)._remote_value = self.from_json(json[self.json_name])
     
     def _serialise(self, instance, json):
+        if not self.serialize:
+            return
+        
         local_value = self.get_data(instance).local_value
         if local_value is not _UNKNOWN:
             json[self.json_name] = self.to_json(local_value)
@@ -276,6 +280,8 @@ class Graph(object):
     
     """
     def __init__(self, json={}):
+        json = json.get('_embedded', {})
+        
         nodes = [_GraphNode._deserialise(v) for v in json.get('nodes', [])]
         nodes = { n.id: n for n in nodes }
         self.nodes = list(nodes.itervalues())
@@ -475,7 +481,7 @@ class WorkflowStatistics(object):
         self.status = json.get('status')
         self.elapsed_time = json.get('elapsedtime')
         self.errors = json.get('errors', [])
-        self.log = [LogEntry(self, l) for l in json.get('log', [])]
+        self.log = [LogEntry(l) for l in json.get('log', [])]
         self.output = [OutputEntry(self, l) for l in json.get('output', [])]
     
     def _serialise(self):
@@ -505,9 +511,7 @@ class LogEntry(object):
         line: The line number at which the message was generated (if known).
         logger: The ID of the logger which generated the message (if known).
     """
-    def __init__(self, statistics, json):
-        self._statistics = statistics
-        
+    def __init__(self, json):
         self.message = json.get('message')
         self.timestamp = json.get('timestamp')
         self.level = json.get('level')
@@ -544,6 +548,22 @@ class OutputEntry(object):
             'stream': self.stream,
             'content': self.content
         }
+
+class JobHistory(object):
+    def __init__(self, json):
+        self.status = json.get('status')
+        self.timestamp = json.get('timestamp')
+
+class JobResults(object):
+    def __init__(self, json):
+        stats = json.get('statistics', {})
+        
+        self.status = stats.get('status')
+        self.start_time = stats.get('starttime')
+        self.end_time = stats.get('endtime')
+        self.elapsed_time = stats.get('elapsedtime')
+        self.log = [LogEntry(e) for e in stats.get('log', [])]
+        self.errors = stats.get('errors', [])
 
 ################################################################################
 # Resource classes.                                                            #
@@ -637,10 +657,9 @@ class Workflow(_Resource):
         id: The workflow's unique ID.
         name: The workflow's name.
         description: A description of the workflow.
-        model_id: The ID of the model run by the workflow.
         organisation_id: The ID of the organisation that "owns" the workflow.
         group_ids: A set containing the IDs of the group(s) that contain the workflow (if any).
-        ports: A list of WorkflowPort instances describing mappings of data to the model's ports.
+        graph: The workflow's operator and data node graph.
     """
     _url_path = 'workflows'
     _collection = 'workflows'
@@ -745,6 +764,25 @@ class Workflow(_Resource):
             raise ValueError('Cannot run workflow: no associated client.')
         
         return self._client.run_workflow(self, debug)
+
+class Job(_Resource):
+    _url_path = 'jobs'
+    _collection = 'jobs'
+    
+    id = _IdProperty('id', serialize=False)
+    workflow_id = _Property('workflowid', writable=True)
+    debug = _Property('debug', writable=True, default=False)
+    organisation_id = _Property('organisationid', serialize=False)
+    group_ids = _Property('groupids', set, list, set(), serialize=False)
+    schedule_id = _Property('scheduleid', serialize=False)
+    status = _Property('status', serialize=False)
+    timestamp = _Property('timestamp', serialize=False)
+    history = _Property('history', lambda v: [JobHistory(h) for h in v], serialize=False)
+    results = _EmbeddedProperty('results', serialize=False)
+    
+    def __init__(self, workflow_id=None, debug=False):
+        self.workflow_id = workflow_id
+        self.debug = debug
 
 ################################################################################
 # Pseudo-resource classes.                                                     #

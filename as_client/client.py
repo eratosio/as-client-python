@@ -24,18 +24,22 @@ class Client(object):
         session: The underlying Python requests' "session" object.
     """
     
-    def __init__(self, base_url, auth=None):
+    def __init__(self, base_url, session=None, auth=None):
         """
         Initialise the client.
         
         Args:
             base_url:   The API's base URL
+            session:    The requests session to use
             auth:       The Python requests authoriser to use to authorise the API requests.
         """
         self._base_url = base_url
         
-        self._session = requests.Session()
-        self._session.auth = auth
+        if session is None:
+            session = requests.Session()
+            session.auth = auth
+        
+        self.session = session
     
     def get_base_image(self, id):
         """
@@ -234,9 +238,12 @@ class Client(object):
         """
         return self._get_resources(model.Workflow, skip, limit, page_size)
     
-    def post_workflow(self, workflow):
+    def upload_workflow(self, workflow):
         """
-        Post a new workflow to the analysis service.
+        Upload a workflow to the analysis service. If the workflow specifies an
+        ID matching an existing workflow, the existing workflow is overwritten.
+        If no ID is specified, a new workflow is created with an automatically
+        generated ID.
         
         Args:
             workflow: An instance of the Workflow class to be posted to the
@@ -252,7 +259,7 @@ class Client(object):
             ServerError: if an HTTP "server error" (5XX) status code is returned
                 by the server.
         """
-        return self._post_resource(workflow)
+        return self._upload_resource(workflow)
     
     def run_workflow(self, workflow, debug=False):
         """
@@ -288,7 +295,7 @@ class Client(object):
             # ... attempt to run it if it has a known ID ...
             if workflow.id is not None:
                 url = util.append_path_to_url(self._base_url, 'workflows', workflow.id, 'results')
-                response = self._session.get(url=url, params=params)
+                response = self.session.get(url=url, params=params)
             
             # ...otherwise, if ID is unknown or workflow doesn't exist, create it.
             if workflow.id is None or response.status_code == 404:
@@ -299,9 +306,15 @@ class Client(object):
         # workflow, run the workflow with the given ID.
         if isinstance(workflow, (str, basestring)):
             url = util.append_path_to_url(self._base_url, 'workflows', workflow, 'results')
-            response = self._session.get(url=url, params=params)
+            response = self.session.get(url=url, params=params)
         
         return model.WorkflowResults(self, self._check_response(response))
+    
+    def delete_workflow(self, workflow):
+        workflow_id = getattr(workflow, 'id', workflow)
+        
+        url = util.append_path_to_url(self._base_url, 'workflows', workflow_id)
+        self._check_response(self.session.delete(url), False)
     
     def create_job(self, workflow, debug=False):
         """
@@ -346,7 +359,7 @@ class Client(object):
         
         id_ = resource.id if updating else resource
         url = util.append_path_to_url(self._base_url, type_._url_path, id_)
-        json = self._check_response(self._session.get(url=url))
+        json = self._check_response(self.session.get(url=url))
         
         instance = resource if updating else type_()
         return instance._update(self, json)
@@ -370,38 +383,53 @@ class Client(object):
                     query[k] = str(v)
             
             url = util.append_path_to_url(self._base_url, type_._url_path)
-            json = self._check_response(self._session.get(url=url, params=query))
+            json = self._check_response(self.session.get(url=url, params=query))
             
             return model._ResourceList(self, type_, json)
     
     def _post_resource(self, resource):
+        return self._upload_resource(resource, method='POST')
+    
+    def _upload_resource(self, resource, method=None):
         assert hasattr(type(resource), '_url_path')
         assert callable(getattr(resource, '_serialise', None))
         
-        json = resource._serialise(include_id=False)
-        url = util.append_path_to_url(self._base_url, resource.__class__._url_path)
+        if method == 'PUT' and not resource.id:
+            raise ValueError('Cannot PUT resource without an ID.')
+        elif method is None:
+            method = 'PUT' if resource.id else 'POST'
         
-        json = self._check_response(self._session.post(url=url, json=json))
+        assert method in ('PUT', 'POST')
         
-        return resource._update(self, json)
+        putting = (method == 'PUT')
+        
+        resource_json = resource._serialise(include_id=putting)
+        path_parts = [resource.__class__._url_path]
+        if putting:
+            path_parts.append(resource.id)
+        url = util.append_path_to_url(self._base_url, *path_parts)
+        
+        resource_json = self._check_response(self.session.request(method, url, json=resource_json))
+        
+        return resource._update(self, resource_json)
     
     def _post_model_archive(self, archive_file, name, mime_type):
         url = util.append_path_to_url(self._base_url, 'models')
         logger.debug('Uploading new model to %s...', url)
         files = { 'archive': (name, archive_file, mime_type, {}) }
         
-        response = self._session.post(url=url, files=files)
+        response = self.session.post(url=url, files=files)
         logger.log(TRACE, 'Response: %s', response.text)
         
         return model.ModelInstallationResult(self, self._check_response(response))
     
-    def _check_response(self, response):
+    def _check_response(self, response, expect_json=True):
         if 400 <= response.status_code < 500:
             raise exceptions.RequestError(response, **response.json())
         elif 500 <= response.status_code:
             raise exceptions.ServerError(response, **response.json())
         
-        return response.json()
+        if expect_json:
+            return response.json()
     
     base_url = property(lambda self: self._base_url)
-    session = property(lambda self: self._session)

@@ -13,7 +13,7 @@ class _Property(object):
     """
     This class implements a data descriptor for the client's "resource" classes
     (see _Resource below).
-    
+
     Specifically, this descriptor is used to manage the resource's attributes
     that are included in the JSON payload from the API. It includes
     functionality for extracting the attribute's value from a JSON document,
@@ -29,50 +29,50 @@ class _Property(object):
         self.default = default
         self.writable = writable
         self.serialize = serialize
-    
+
     def __get__(self, instance, owner):
         if instance is None:
             return self
-        
+
         data = self.get_data(instance)
-        
+
         if data.needs_fetch:
             id_ = getattr(instance, 'id', None)
             client = getattr(instance, '_client', None)
             if None not in (id_, client):
                 client._fetch_resource(instance, owner)
-        
+
         return data.local_value
-    
+
     def __set__(self, instance, value):
         if not self.writable:
             cls = instance.__class__
             descriptors = inspect.getmembers(cls, lambda m: m is self)
             assert len(descriptors) == 1
-            
+
             raise AttributeError('Property "{}" of class "{}" is not writable.'.format(descriptors[0][0], cls.__name__))
-        
+
         self.get_data(instance).local_value = value
-    
+
     def __del__(self, instance):
         pass # TODO
-    
+
     def get_data(self, instance):
         try:
             props = instance.__properties
         except AttributeError:
             props = instance.__properties = {}
-        
+
         return props.setdefault(self.json_name, _PropertyData(self))
-    
+
     def _update(self, instance, json):
         if self.json_name in json:
             self.get_data(instance)._remote_value = self.from_json(json[self.json_name])
-    
+
     def _serialise(self, instance, json):
         if not self.serialize:
             return
-        
+
         local_value = self.get_data(instance).local_value
         if local_value is not _UNKNOWN:
             json[self.json_name] = self.to_json(local_value)
@@ -80,7 +80,7 @@ class _Property(object):
 class _IdProperty(_Property):
     """
     A subclass of the _Property data descriptor.
-    
+
     This descriptor only differs from the standard _Property descriptor in that
     it *doesn't* trigger a fetch of the resource if the value hasn't previously
     been retrieved - for example, if we don't know the resource's ID, there's no
@@ -93,21 +93,21 @@ class _IdProperty(_Property):
 class _EmbeddedProperty(_Property):
     """
     A subclass of the _Property data descriptor.
-    
+
     This descriptor differs from the standard _Property descriptor in that when
     parsing JSON, it extracts the property value from the JSON object's
     "_embedded" property (if present) rather than from the JSON object itself.
     This is used to support parsing of Hypertext Application Language payloads.
-    
+
     TODO: update to support arbitrary properties of the JSON object, not just
     "_embedded"?
     """
     def _update(self, instance, json):
         json = json.get('_embedded', {})
-        
+
         if self.json_name in json:
             self.get_data(instance)._remote_value = self.from_json(json[self.json_name])
-    
+
     """def _serialise(self, instance, json):
         local_value = self.get_data(instance).local_value
         if local_value is not _UNKNOWN:
@@ -116,16 +116,16 @@ class _EmbeddedProperty(_Property):
 class _PropertyData(object):
     """
     A class for storing property values.
-    
+
     This class is primarily concerned with tracking both a "local" and a
     "remote" version of the property's value, to allow changes made locally to
     be tracked.
     """
     def __init__(self, property_):
         self._property = property_
-        
+
         self._local_value = self._remote_value = _UNKNOWN
-    
+
     @property
     def local_value(self):
         if self._local_value is not _UNKNOWN:
@@ -134,11 +134,11 @@ class _PropertyData(object):
             return self._remote_value
         else:
             return self._property.default
-    
+
     @local_value.setter
     def local_value(self, value):
         self._local_value = value
-    
+
     @property
     def needs_fetch(self):
         return self._remote_value is _UNKNOWN
@@ -150,53 +150,53 @@ class _PropertyData(object):
 class _Resource(object):
     """
     Base class for all the client's "resource" classes.
-    
+
     This class does very little, other than providing an algorithm for updating
     a resource's property values when given a JSON object describing the
     resource.
     """
     def _update(self, client, json):
         self._client = client
-        
+
         for prop_id, prop in inspect.getmembers(self.__class__, lambda m: isinstance(m, _Property)):
             prop._update(self, json)
-        
+
         return self
-    
+
     def _serialise(self, include_id=True):
         result = {}
-        
+
         for prop_id, prop in inspect.getmembers(self.__class__, lambda m: isinstance(m, _Property)):
             if not include_id and isinstance(prop, _IdProperty):
                 continue
-            
+
             prop._serialise(self, result)
-        
+
         return result
 
 class _ResourceList(collections.Sequence):
     """
     A thin wrapper around a list of resource class instances.
-    
+
     Given a JSON object representing a HAL-encapsulated list of resources,
     deserialises the resource instances into a list and extracts the associated
     paging metadata.
     """
     def __init__(self, client, type_, json):
         self._type = type_
-        
+
         self._items = [type_()._update(client, v) for v in json.get('_embedded', {}).get(type_._collection, [])]
         self._skip = json.get('skip')
         self._limit = json.get('limit')
         self._count = json.get('count')
         self._total_count = json.get('totalcount')
-    
+
     def __getitem__(self, index):
         return self._items[index]
-    
+
     def __len__(self):
         return len(self._items)
-    
+
     skip = property(lambda self: self._skip)
     limit = property(lambda self: self._limit)
     count = property(lambda self: self._count)
@@ -211,9 +211,9 @@ class _ResourceCollection(collections.Sequence):
         self._client = client
         self._type = type_
         self._page_size = page_size
-        
+
         self._items = self._length = None
-    
+
     def __getitem__(self, index):
         try:
             # If item not previously loaded, load it now.
@@ -222,33 +222,33 @@ class _ResourceCollection(collections.Sequence):
                 # page size.
                 if self._page_size is None:
                     self._load(0)
-                
+
                 # If item still not loaded, load its page.
                 if not self._is_item_loaded(index):
                     self._load((index // self._page_size) * self._page_size)
-            
+
             result = self._items[index]
             assert result is not _UNKNOWN
-        
+
             return result
         except IndexError:
             raise IndexError('Index {} out of range for resource collection with {} items.'.format(index, self._length))
-    
+
     def __len__(self):
         if self._length is None:
             self._load(0)
-    
+
     def _load(self, skip):
         items = self._client._get_resources(self._type, skip, self._page_size, None)
-        
+
         self._length = items.total_count
         self._page_size = items.limit
-        
+
         if self._items is None:
             self._items = [_UNKNOWN] * self._length
-        
+
         self._items[items.skip:items.skip+items.count] = items
-    
+
     def _is_item_loaded(self, index):
         return (self._items is not None) and (self._items[index] is not _UNKNOWN)
 
@@ -260,7 +260,7 @@ class HostEnvironment(object):
     """
     Representation of the "host environment" type used in the "base image"
     type's "hostenvironment" property.
-    
+
     Attributes:
         architecture: A string describing the host's CPU architecture (e.g. "X86_32", "X86_64").
         operating_system: A string describing the host's operating system (e.g. LINUX, WINDOWS, MAC_OS).
@@ -268,7 +268,7 @@ class HostEnvironment(object):
     def __init__(self, json):
         self.architecture = json.get('architecture')
         self.operating_system = json.get('operatingsystem')
-    
+
     def _serialise(self):
         return {
             'architecture': self.architecture,
@@ -277,15 +277,15 @@ class HostEnvironment(object):
 
 class Graph(object):
     """
-    
+
     """
     def __init__(self, json={}):
         json = json.get('_embedded', {})
-        
+
         nodes = [_GraphNode._deserialise(v) for v in json.get('nodes', [])]
         nodes = { n.id: n for n in nodes }
-        self.nodes = list(nodes.itervalues())
-        
+        self.nodes = list(nodes.values())
+
         self.connections = [
             GraphConnection(
                 nodes[c['source']['node']],
@@ -294,15 +294,15 @@ class Graph(object):
                 c['target'].get('port')
             ) for c in json.get('connections', [])
         ]
-    
+
     def clone(self):
         result = Graph()
-        
+
         result.nodes = self.nodes.copy()
         result.connections = list(self.connections)
-        
+
         return result
-    
+
     def _serialise(self):
         return {
             'nodes': [n._serialise() for n in self.nodes],
@@ -312,10 +312,10 @@ class Graph(object):
 class _GraphNode(object):
     def __init__(self, id):
         self.id = id
-    
+
     def _serialise(self):
         return { 'id': self.id }
-    
+
     @staticmethod
     def _deserialise(json):
         if 'modelid' in json:
@@ -332,12 +332,12 @@ class _GraphNode(object):
 class ModelNode(_GraphNode):
     def __init__(self, id, model_id):
         super(ModelNode, self).__init__(id)
-        
+
         self.model_id = model_id
-    
+
     def _serialise(self):
         return dict(super(ModelNode, self)._serialise(), modelid=self.model_id)
-    
+
     @staticmethod
     def _deserialise(json):
         return ModelNode(json['id'], json['modelid'])
@@ -345,13 +345,13 @@ class ModelNode(_GraphNode):
 class DocumentNode(_GraphNode):
     def __init__(self, id, value=None, document_id=None):
         super(DocumentNode, self).__init__(id)
-        
+
         if (value is None) and (document_id is None):
             raise ValueError('At least one of the value or document ID may be specified.')
-        
+
         self.value = value
         self.document_id = document_id
-    
+
     def _serialise(self):
         result = super(DocumentNode, self)._serialise()
         if self.value is not None:
@@ -359,7 +359,7 @@ class DocumentNode(_GraphNode):
         if self.document_id is not None:
             result['documentid'] = self.document_id
         return result
-    
+
     @staticmethod
     def _deserialise(json):
         return DocumentNode(json['id'], json.get('_embedded', {}).get('datanode', {}).get('value'), json.get('documentid'))
@@ -367,12 +367,12 @@ class DocumentNode(_GraphNode):
 class StreamNode(_GraphNode):
     def __init__(self, id, stream_id):
         super(StreamNode, self).__init__(id)
-        
+
         self.stream_id = stream_id
-    
+
     def _serialise(self):
         return dict(super(StreamNode, self)._serialise(), streamid=self.stream_id)
-    
+
     @staticmethod
     def _deserialise(json):
         return StreamNode(json['id'], json['streamid'])
@@ -380,12 +380,12 @@ class StreamNode(_GraphNode):
 class MultiStreamNode(_GraphNode):
     def __init__(self, id, stream_ids):
         super(MultiStreamNode, self).__init__(id)
-        
+
         self.stream_ids = stream_ids
-    
+
     def _serialise(self):
         return dict(super(MultiStreamNode, self)._serialise(), streamids=self.stream_ids)
-    
+
     @staticmethod
     def _deserialise(json):
         return MultiStreamNode(json['id'], json['streamids'])
@@ -393,17 +393,17 @@ class MultiStreamNode(_GraphNode):
 class GridNode(_GraphNode):
     def __init__(self, id, dataset, catalog=None):
         super(GridNode, self).__init__(id)
-        
+
         self.catalog = catalog
         self.dataset = dataset
-    
+
     def _serialise(self):
         result = super(GridNode, self)._serialise()
         result['dataset'] = self.dataset
         if self.catalog is not None:
             result['catalog'] = self.catalog
         return result
-    
+
     @staticmethod
     def _deserialise(json):
         return GridNode(json['id'], json['dataset'], json.get('catalog'))
@@ -412,31 +412,31 @@ class GraphConnection(object):
     def __init__(self, source_node, target_node, source_port=None, target_port=None):
         self._source_node = source_node
         self._target_node = target_node
-        
+
         if isinstance(source_node, ModelNode) == (source_port is None):
             raise ValueError('The source_port must be specified if (and only if) source_node is a ModelNode.')
         if isinstance(target_node, ModelNode) == (target_port is None):
             raise ValueError('The target_port must be specified if (and only if) target_node is a ModelNode.')
-        
+
         self._source_port = source_port
         self._target_port = target_port
-    
+
     def _serialise(self):
         source = { 'node': self._source_node.id }
         if self._source_port is not None:
             source['port'] = self._source_port
-        
+
         target = { 'node': self._target_node.id }
         if self._target_port is not None:
             target['port'] = self._target_port
-        
+
         return { 'source': source, 'target': target }
 
 class Port(object):
     """
     Representation of the "port" type used in the "model" type's "ports"
     property.
-    
+
     Attributes:
         name: The port's name.
         required: True if a value must be supplied for the port when executing the model, otherwise False.
@@ -450,7 +450,7 @@ class Port(object):
         self.type = json.get('type')
         self.description = json.get('description')
         self.direction = json.get('direction')
-    
+
     def _serialise(self):
         return {
             'portname': self.name,
@@ -463,7 +463,7 @@ class Port(object):
 class WorkflowStatistics(object):
     """
     Representation of the execution statistics generated by running a workflow.
-    
+
     Attributes:
         start_time: The time at which the workflow execution started, as an ISO-8601 timestamp.
         end_time: The time at which the workflow execution ended, as an ISO-8601 timestamp.
@@ -475,7 +475,7 @@ class WorkflowStatistics(object):
     """
     def __init__(self, results, json):
         self._results = results
-        
+
         self.start_time = json.get('starttime')
         self.end_time = json.get('endtime')
         self.status = json.get('status')
@@ -483,7 +483,7 @@ class WorkflowStatistics(object):
         self.errors = json.get('errors', [])
         self.log = [LogEntry(l) for l in json.get('log', [])]
         self.output = [OutputEntry(self, l) for l in json.get('output', [])]
-    
+
     def _serialise(self):
         return {
             'startTime': self.start_time,
@@ -499,10 +499,10 @@ class LogEntry(object):
     """
     Represents a log entry, as captured by the model execution framework's
     execution logging system.
-    
+
     For Python-based models, these correspond to messages captured by the
     standard Python logging framework.
-    
+
     Attributes:
         message: The log message.
         timestamp: The time at which the log message was generated, as an IS0-8601 timestamp.
@@ -518,7 +518,7 @@ class LogEntry(object):
         self.file = json.get('file')
         self.line = json.get('line')
         self.logger = json.get('logger')
-    
+
     def _serialise(self):
         return {
             'message': self.message,
@@ -532,17 +532,17 @@ class LogEntry(object):
 class OutputEntry(object):
     """
     Represents an instance of console output from an executed model.
-    
+
     Attributes:
         stream: The stream on which output occurred (i.e. "STDOUT" or "STDERR").
         content: The text that was output.
     """
     def __init__(self, statistics, json):
         self._statistics = statistics
-        
+
         self.stream = json.get('stream')
         self.content = json.get('content')
-    
+
     def _serialise(self):
         return {
             'stream': self.stream,
@@ -557,7 +557,7 @@ class JobHistory(object):
 class JobResults(object):
     def __init__(self, json):
         stats = json.get('statistics', {})
-        
+
         self.status = stats.get('status')
         self.start_time = stats.get('starttime')
         self.end_time = stats.get('endtime')
@@ -572,7 +572,7 @@ class JobResults(object):
 class BaseImage(_Resource):
     """
     Representation of the API's "base image" resource type.
-    
+
     Attributes:
         id: The base image's unique ID.
         name: The base image's name.
@@ -587,7 +587,7 @@ class BaseImage(_Resource):
     """
     _url_path = 'base-images'
     _collection = 'baseImages'
-    
+
     id = _IdProperty('id')
     name = _Property('name')
     description = _Property('description')
@@ -602,7 +602,7 @@ class BaseImage(_Resource):
 class Model(_Resource):
     """
     Representation of the API's "model" resource type.
-    
+
     Attributes:
         id: The model's unique ID.
         name: The model's name.
@@ -615,7 +615,7 @@ class Model(_Resource):
     """
     _url_path = 'models'
     _collection = 'models'
-    
+
     id = _IdProperty('id')
     name = _Property('name')
     version = _Property('version')
@@ -624,35 +624,35 @@ class Model(_Resource):
     organisation_id = _Property('organisationid')
     group_ids = _Property('groupids', set, list, set())
     ports = _EmbeddedProperty('ports', lambda v: [Port(p) for p in v], lambda v: [p._serialise() for p in v], [])
-    
+
     def new_workflow(self):
         """
         Create a new instance of the Workflow class, representing a new workflow
         for running this model.
-        
+
         The workflow that is created has the correct model ID assigned, has a
         placeholder name and description, has the same organisation ID and group
         IDs, and has placeholder values assigned to the ports attribute.
-        
+
         Returns:
             A new instance of the Workflow class.
         """
         result = Workflow()
         result._client = self._client
-        
+
         result.name = '{} Workflow'.format(self.name)
         result.description = '{} workflow'.format(self.name)
         result.model_id = self.id
         result.organisation_id = self.organisation_id
         result.group_ids = set(self.group_ids)
         result.ports = [WorkflowPort._deserialise(p._serialise()) for p in self.ports]
-        
+
         return result
 
 class Workflow(_Resource):
     """
     Representation of the API's "workflow" resource type.
-    
+
     Attributes:
         id: The workflow's unique ID.
         name: The workflow's name.
@@ -663,31 +663,31 @@ class Workflow(_Resource):
     """
     _url_path = 'workflows'
     _collection = 'workflows'
-    
+
     id = _IdProperty('id')
     name = _Property('name', writable=True)
     description = _Property('description', writable=True)
     organisation_id = _Property('organisationid', writable=True)
     group_ids = _Property('groupids', set, list, set(), writable=True)
     graph = _EmbeddedProperty('graph', lambda v: Graph(v), lambda v: v._serialise(), Graph())
-    
+
     def save(self, client=None):
         """
         Saves the workflow using the Client class' "post_workflow()" method.
-        
+
         If the "client" argument is supplied, it must be an instance of the
         Client class, which is then used to save the workflow. Otherwise, the
         workflow must have been previously obtained with a call one of the
         Client class' workflow methods, in which case the workflow is saved
         using that same Client instance.
-        
+
         Args:
             client: The Client class instance to use to save the workflow.
-        
+
         Returns:
             The same Worfklow instance, updated with any new properties
             generated by the analysis service.
-        
+
         Raises:
             ValueError: If the client parameter is omitted, and the Workflow
                 instance hasn't been obtained through a previous call to one of
@@ -699,55 +699,55 @@ class Workflow(_Resource):
         """
         if client is not None:
             self._client = client
-        
+
         if self._client is None:
             raise ValueError('Cannot run workflow: no associated client.')
-        
+
         return self._client.post_workflow(self)
-    
+
     def clone(self):
         """
         Generate a "clone" of the workflow.
-        
+
         The returned workflow is functionally identical to the one this method
         is called on, with the exception that the ID is not set (since IDs are
         only assigned when the workflow is actually saved).
-        
+
         Returns:
             A new Workflow instance, representing a clone of the instance that
             the method was called on.
         """
         result = Workflow()
         result._client = self._client
-        
+
         result.name = self.name
         result.description = self.description
         result.organisation_id = self.organisation_id
         result.group_ids = set(self.group_ids)
         result.graph = self.graph.clone()
-        
+
         return result
-    
+
     def run(self, debug=False, client=None):
         """
         Runs the workflow, using the Client class' "run_workflow()" method.
-        
+
         If the "client" argument is supplied, it must be an instance of the
         Client class, which is then used to run the workflow. Otherwise, the
         workflow must have been previously obtained with a call one of the
         Client class' workflow methods, in which case the workflow is run
         using that same Client instance.
-        
+
         Args:
             debug: If true, the workflow is run in "debug" mode (which causes
                 additional log messages and output data to be returned in the
                 response).
             client: The Client class instance to use to save the workflow.
-        
+
         Returns:
             An instance of WorkflowResult representing the results of executing
             the workflow.
-        
+
         Raises:
             ValueError: If the client parameter is omitted, and the Workflow
                 instance hasn't been obtained through a previous call to one of
@@ -759,16 +759,16 @@ class Workflow(_Resource):
         """
         if client is not None:
             self._client = client
-        
+
         if self._client is None:
             raise ValueError('Cannot run workflow: no associated client.')
-        
+
         return self._client.run_workflow(self, debug)
 
 class Job(_Resource):
     _url_path = 'jobs'
     _collection = 'jobs'
-    
+
     id = _IdProperty('id', serialize=False)
     workflow_id = _Property('workflowid', writable=True)
     debug = _Property('debug', writable=True, default=False)
@@ -779,7 +779,7 @@ class Job(_Resource):
     timestamp = _Property('timestamp', serialize=False)
     history = _Property('history', lambda v: [JobHistory(h) for h in v], serialize=False)
     results = _EmbeddedProperty('results', serialize=False)
-    
+
     def __init__(self, workflow_id=None, debug=False):
         self.workflow_id = workflow_id
         self.debug = debug
@@ -791,12 +791,12 @@ class Job(_Resource):
 # NOTE: like the "real" resource classes, these classes represent the top-level
 # response object returned by one (or more) of the API's endpoints. Where they
 # differ from the real resource classes is that these represent transient
-# entities. 
+# entities.
 
 class ModelInstallationResult(_Resource):
     """
     Represents the response from the API when installing a new model.
-    
+
     Attributes:
         image_size: The size of the generated Docker image, in bytes.
         models: A list of Model instances describing the newly installed model(s) (there may be more than one).
@@ -808,7 +808,7 @@ class ModelInstallationResult(_Resource):
 class WorkflowResults(object):
     """
     Represents the response from the API when running a workflow.
-    
+
     Attributes:
         id: The unique ID of the results.
         workflow_id: The ID of the workflow that generated the results.
@@ -817,14 +817,14 @@ class WorkflowResults(object):
     """
     def __init__(self, client, json):
         self._client = client
-        
+
         self.id = json.get('id')
         self.workflow_id = json.get('workflowid')
-        
+
         embedded = json.get('_embedded', {})
         self.statistics = WorkflowStatistics(self, embedded.get('statistics', {}))
         self.ports = [WorkflowPort._deserialise(p) for p in embedded.get('ports', {})]
-    
+
     def _serialise(self):
         return {
             'id': self.id,

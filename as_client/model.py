@@ -237,6 +237,7 @@ class _ResourceCollection(collections.Sequence):
     def __len__(self):
         if self._length is None:
             self._load(0)
+        return self._length
 
     def _load(self, skip):
         items = self._client._get_resources(self._type, skip, self._page_size, None)
@@ -310,11 +311,12 @@ class Graph(object):
         }
 
 class _GraphNode(object):
-    def __init__(self, id):
+    def __init__(self, id, label):
         self.id = id
+        self.label = label
 
     def _serialise(self):
-        return { 'id': self.id }
+        return { 'id': self.id, 'label': self.label }
 
     @staticmethod
     def _deserialise(json):
@@ -330,8 +332,8 @@ class _GraphNode(object):
             return GridNode._deserialise(json)
 
 class ModelNode(_GraphNode):
-    def __init__(self, id, model_id):
-        super(ModelNode, self).__init__(id)
+    def __init__(self, id, label, model_id):
+        super(ModelNode, self).__init__(id, label)
 
         self.model_id = model_id
 
@@ -340,11 +342,11 @@ class ModelNode(_GraphNode):
 
     @staticmethod
     def _deserialise(json):
-        return ModelNode(json['id'], json['modelid'])
+        return ModelNode(json['id'], json.get('label'), json['modelid'])
 
 class DocumentNode(_GraphNode):
-    def __init__(self, id, value=None, document_id=None):
-        super(DocumentNode, self).__init__(id)
+    def __init__(self, id, label, value=None, document_id=None):
+        super(DocumentNode, self).__init__(id, label)
 
         if (value is None) and (document_id is None):
             raise ValueError('At least one of the value or document ID may be specified.')
@@ -362,11 +364,11 @@ class DocumentNode(_GraphNode):
 
     @staticmethod
     def _deserialise(json):
-        return DocumentNode(json['id'], json.get('_embedded', {}).get('datanode', {}).get('value'), json.get('documentid'))
+        return DocumentNode(json['id'], json.get('label'), json.get('_embedded', {}).get('datanode', {}).get('value'), json.get('documentid'))
 
 class StreamNode(_GraphNode):
-    def __init__(self, id, stream_id):
-        super(StreamNode, self).__init__(id)
+    def __init__(self, id, label, stream_id):
+        super(StreamNode, self).__init__(id, label)
 
         self.stream_id = stream_id
 
@@ -375,11 +377,11 @@ class StreamNode(_GraphNode):
 
     @staticmethod
     def _deserialise(json):
-        return StreamNode(json['id'], json['streamid'])
+        return StreamNode(json['id'], json.get('label'), json['streamid'])
 
 class MultiStreamNode(_GraphNode):
-    def __init__(self, id, stream_ids):
-        super(MultiStreamNode, self).__init__(id)
+    def __init__(self, id, label, stream_ids):
+        super(MultiStreamNode, self).__init__(id, label)
 
         self.stream_ids = stream_ids
 
@@ -388,11 +390,11 @@ class MultiStreamNode(_GraphNode):
 
     @staticmethod
     def _deserialise(json):
-        return MultiStreamNode(json['id'], json['streamids'])
+        return MultiStreamNode(json['id'], json.get('label'), json['streamids'])
 
 class GridNode(_GraphNode):
-    def __init__(self, id, dataset, catalog=None):
-        super(GridNode, self).__init__(id)
+    def __init__(self, id, label, dataset, catalog=None):
+        super(GridNode, self).__init__(id, label)
 
         self.catalog = catalog
         self.dataset = dataset
@@ -406,7 +408,7 @@ class GridNode(_GraphNode):
 
     @staticmethod
     def _deserialise(json):
-        return GridNode(json['id'], json['dataset'], json.get('catalog'))
+        return GridNode(json['id'], json.get('label'), json['dataset'], json.get('catalog'))
 
 class GraphConnection(object):
     def __init__(self, source_node, target_node, source_port=None, target_port=None):
@@ -565,6 +567,16 @@ class JobResults(object):
         self.log = [LogEntry(e) for e in stats.get('log', [])]
         self.errors = stats.get('errors', [])
 
+class RunAs(object):
+    def __init__(self, json):
+        self.roles = set(json.get('roles', []))
+
+    def _serialise(self):
+        return { 'roles': list(self.roles) }
+
+    def clone(self):
+        return RunAs({'roles': self.roles})
+
 ################################################################################
 # Resource classes.                                                            #
 ################################################################################
@@ -670,6 +682,8 @@ class Workflow(_Resource):
     organisation_id = _Property('organisationid', writable=True)
     group_ids = _Property('groupids', set, list, set(), writable=True)
     graph = _EmbeddedProperty('graph', lambda v: Graph(v), lambda v: v._serialise(), Graph())
+    run_as = _EmbeddedProperty('runas', lambda v: RunAs(v), lambda v: v._serialise(), RunAs({'roles': []}))
+    logs_truncated_to = _Property('logsTruncatedTo')
 
     def save(self, client=None):
         """
@@ -703,7 +717,7 @@ class Workflow(_Resource):
         if self._client is None:
             raise ValueError('Cannot run workflow: no associated client.')
 
-        return self._client.post_workflow(self)
+        return self._client.upload_workflow(self)
 
     def clone(self):
         """
@@ -725,6 +739,7 @@ class Workflow(_Resource):
         result.organisation_id = self.organisation_id
         result.group_ids = set(self.group_ids)
         result.graph = self.graph.clone()
+        result.run_as = self.run_as.clone()
 
         return result
 

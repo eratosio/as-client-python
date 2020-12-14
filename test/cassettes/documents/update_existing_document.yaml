@@ -1,0 +1,376 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      User-Agent:
+      - python-requests/2.22.0
+    method: GET
+    uri: https://senaps.io/api/analysis/documentnodes/77e7df34-8f9b-4f95-8eee-fc62ec70f37c?apikey=05a3d68a92ee4b1b8a217fec8e01642c
+  response:
+    body:
+      string: '{"value":"Not Lorem Ipsum!","documentid":"77e7df34-8f9b-4f95-8eee-fc62ec70f37c","valuetruncated":false,"organisationid":"csiro","groupids":[],"type":"document","_links":{"self":{"href":"https://senaps.io/api/analysis/documentnodes/77e7df34-8f9b-4f95-8eee-fc62ec70f37c"},"value":{"href":"https://senaps.io/api/analysis/documentnodes/77e7df34-8f9b-4f95-8eee-fc62ec70f37c/value/"}}}'
+    headers:
+      Access-Control-Allow-Origin:
+      - '*'
+      Allow:
+      - OPTIONS, GET, POST, PUT
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '379'
+      Content-Security-Policy-Report-Only:
+      - 'default-src ''self'' data: ''unsafe-inline'' ''unsafe-eval'' https://jira.csiro.au
+        https://www.google-analytics.com https://maps.google.com https://maps.googleapis.com'
+      Content-Type:
+      - application/json
+      Date:
+      - Mon, 14 Dec 2020 01:28:40 GMT
+      Expect-CT:
+      - max-age=0, enforce
+      Feature-Policy:
+      - accelerometer 'none'; ambient-light-sensor 'none'; autoplay 'none'; camera
+        'none'; encrypted-media 'none'; fullscreen 'self'; geolocation 'self'; gyroscope
+        'none'; magnetometer 'none'; microphone 'none'; midi 'none'; payment 'self';
+        picture-in-picture 'none'; speaker 'none'; sync-xhr 'self'; usb 'none'; vibrate
+        'none'; vr 'none';
+      Referrer-Policy:
+      - strict-origin-when-cross-origin
+      Via:
+      - kong/0.15.0
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-Kong-Proxy-Latency:
+      - '0'
+      X-Kong-Upstream-Latency:
+      - '25'
+      X-RateLimit-Limit-minute:
+      - '300'
+      X-RateLimit-Limit-second:
+      - '100'
+      X-RateLimit-Remaining-minute:
+      - '296'
+      X-RateLimit-Remaining-second:
+      - '99'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      User-Agent:
+      - python-requests/2.22.0
+    method: GET
+    uri: https://senaps.io/api/analysis/documentnodes/77e7df34-8f9b-4f95-8eee-fc62ec70f37c?apikey=05a3d68a92ee4b1b8a217fec8e01642c
+  response:
+    body:
+      string: '{"value":"Not Lorem Ipsum!","documentid":"77e7df34-8f9b-4f95-8eee-fc62ec70f37c","valuetruncated":false,"organisationid":"csiro","groupids":[],"type":"document","_links":{"self":{"href":"https://senaps.io/api/analysis/documentnodes/77e7df34-8f9b-4f95-8eee-fc62ec70f37c"},"value":{"href":"https://senaps.io/api/analysis/documentnodes/77e7df34-8f9b-4f95-8eee-fc62ec70f37c/value/"}}}'
+    headers:
+      Access-Control-Allow-Origin:
+      - '*'
+      Allow:
+      - OPTIONS, GET, POST, PUT
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '379'
+      Content-Security-Policy-Report-Only:
+      - 'default-src ''self'' data: ''unsafe-inline'' ''unsafe-eval'' https://jira.csiro.au
+        https://www.google-analytics.com https://maps.google.com https://maps.googleapis.com'
+      Content-Type:
+      - application/json
+      Date:
+      - Mon, 14 Dec 2020 01:28:40 GMT
+      Expect-CT:
+      - max-age=0, enforce
+      Feature-Policy:
+      - accelerometer 'none'; ambient-light-sensor 'none'; autoplay 'none'; camera
+        'none'; encrypted-media 'none'; fullscreen 'self'; geolocation 'self'; gyroscope
+        'none'; magnetometer 'none'; microphone 'none'; midi 'none'; payment 'self';
+        picture-in-picture 'none'; speaker 'none'; sync-xhr 'self'; usb 'none'; vibrate
+        'none'; vr 'none';
+      Referrer-Policy:
+      - strict-origin-when-cross-origin
+      Via:
+      - kong/0.15.0
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-Kong-Proxy-Latency:
+      - '1'
+      X-Kong-Upstream-Latency:
+      - '20'
+      X-RateLimit-Limit-minute:
+      - '300'
+      X-RateLimit-Limit-second:
+      - '100'
+      X-RateLimit-Remaining-minute:
+      - '295'
+      X-RateLimit-Remaining-second:
+      - '98'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: '{"groupids": [], "id": "77e7df34-8f9b-4f95-8eee-fc62ec70f37c", "organisationid":
+      "csiro", "value": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+      Nulla aliquet magna vel dapibus rutrum. Phasellus laoreet orci vel magna tristique,
+      dictum sodales arcu hendrerit. Nullam id euismod turpis. Vestibulum in nisi
+      eu turpis elementum aliquet eu ac nibh. Integer eget elit nec neque scelerisque
+      euismod. Morbi luctus turpis dictum lorem sodales, eget gravida nunc iaculis.
+      Nulla a diam scelerisque, elementum mi eget, ultrices lorem. Morbi ultrices,
+      odio et sollicitudin pulvinar, dolor ante lobortis mi, a semper elit velit vel
+      augue. Integer eu arcu cursus, eleifend purus ac, fringilla quam. Phasellus
+      ut lobortis mauris. Quisque viverra nisi gravida augue elementum scelerisque.
+      Aliquam pharetra iaculis est, viverra vestibulum mi tempor ut. Pellentesque
+      habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas.
+      Nulla elementum, purus sed posuere hendrerit, nisi metus cursus quam, eu placerat
+      quam libero vel metus.\n\nMaecenas eu pellentesque mauris. Vestibulum consectetur
+      diam eu augue vestibulum posuere. Morbi congue nisl varius tempor convallis.
+      Cras non semper odio. Nullam mattis mauris eget sagittis fringilla. Sed tincidunt
+      mi a massa accumsan convallis. Praesent fringilla ante eu ante suscipit ornare.\n\nPellentesque
+      nec luctus sem. Integer a magna at ex eleifend luctus. Quisque nec arcu libero.
+      Mauris tristique semper metus id facilisis. Vestibulum fermentum eros eu quam
+      pharetra, ut maximus turpis volutpat. Fusce aliquam ante nisi, ut posuere ligula
+      varius sit amet. Curabitur sagittis nibh vitae dolor viverra, in suscipit metus
+      consectetur. Nulla sed lorem sed nulla ultricies congue.\n\nSed ac est in dui
+      rutrum convallis nec sed sem. Nullam non mauris metus. Ut mattis ornare ex,
+      congue cursus nunc placerat in. Quisque molestie maximus massa, at commodo lacus
+      efficitur nec. In sit amet porta augue, at tincidunt libero. Duis a lectus tellus.
+      Pellentesque sit amet lacus nec enim lobortis suscipit. Pellentesque in sapien
+      dignissim, scelerisque turpis sit amet, posuere est. Nulla efficitur dolor quis
+      nibh accumsan elementum. Ut ullamcorper tempus lorem vel aliquet. Vestibulum
+      sed nisl enim. Aenean semper vitae urna ut sagittis. Quisque in eros lorem.
+      Aenean at erat nec nisl rhoncus mattis cursus id mi. Duis sagittis nulla id
+      lorem aliquam, eget ornare nisi placerat.\n\nCurabitur a ornare odio, a pulvinar
+      orci. Vestibulum volutpat lorem ac lacus pharetra, vel mattis nisi hendrerit.
+      Sed faucibus ligula et suscipit pulvinar. Aenean posuere pretium erat at sodales.
+      Curabitur imperdiet tortor nec mattis vestibulum. Sed augue leo, posuere quis
+      nulla a, finibus finibus neque. Aenean at gravida nisl. Sed suscipit pharetra
+      malesuada. Aenean sit amet ex id metus dictum vehicula facilisis et tellus.
+      Vestibulum interdum ante at ante tincidunt viverra. Quisque malesuada magna
+      quis massa tincidunt malesuada."}'
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '2968'
+      Content-Type:
+      - application/json
+      User-Agent:
+      - python-requests/2.22.0
+    method: PUT
+    uri: https://senaps.io/api/analysis/documentnodes/77e7df34-8f9b-4f95-8eee-fc62ec70f37c?apikey=05a3d68a92ee4b1b8a217fec8e01642c
+  response:
+    body:
+      string: '{"value":"Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+        Nulla aliquet magna vel dapibus rutrum. Phasellus laoreet orci vel magna tristique,
+        dictum sodales arcu hendrerit. Nullam id euismod turpis. Vestibulum in nisi
+        eu turpis elementum aliquet eu ac nibh. Integer eget elit nec neque scelerisque
+        euismod. Morbi luctus turpis dictum lorem sodales, eget gravida nunc iaculis.
+        Nulla a diam scelerisque, elementum mi eget, ultrices lorem. Morbi ultrices,
+        odio et sollicitudin pulvinar, dolor ante lobortis mi, a semper elit velit
+        vel augue. Integer eu arcu cursus, eleifend purus ac, fringilla quam. Phasellus
+        ut lobortis mauris. Quisque viverra nisi gravida augue elementum scelerisque.
+        Aliquam pharetra iaculis est, viverra vestibulum mi tempor ut. Pellentesque
+        habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas.
+        Nulla elementum, purus sed posuere hendrerit, nisi metus cursus quam, eu placerat
+        quam libero vel metus.\n\nMaecenas eu pellentesque mauris. Vestibulum consectetur
+        diam eu augue vestibulum posuere. Morbi congue nisl varius tempor convallis.
+        Cras non semper odio. Nullam mattis mauris eget sagittis fringilla. Sed tincidunt
+        mi a massa accumsan convallis. Praesent fringilla ante eu ante suscipit ornare.\n\nPellentesque
+        nec luctus sem. Integer a magna at ex eleifend luctus. Quisque nec arcu libero.
+        Mauris tristique semper metus id facilisis. Vestibulum fermentum eros eu quam
+        pharetra, ut maximus turpis volutpat. Fusce aliquam ante nisi, ut posuere
+        ligula varius sit amet. Curabitur sagittis nibh vitae dolor viverra, in suscipit
+        metus consectetur. Nulla sed lorem sed nulla ultricies congue.\n\nSed ac est
+        in dui rutrum convallis nec sed sem. Nullam non mauris metus. Ut mattis ornare
+        ex, congue cursus nunc placerat in. Quisque molestie maximus massa, at commodo
+        lacus efficitur nec. In sit amet porta augue, at tincidunt libero. Duis a
+        lectus tellus. Pellentesque sit amet lacus nec enim lobortis suscipit. Pellentesque
+        in sapien dignissim, scelerisque turpis sit amet, posuere est. Nulla efficitur
+        dolor quis nibh accumsan elementum. Ut ullamcorper tempus lorem vel aliquet.
+        Vestibulum sed nisl enim. Aenean semper vitae urna ut sagittis. Quisque in
+        eros lorem. Aenean at erat nec nisl rhoncus mattis cursus id mi. Duis sagittis
+        nulla id lorem aliquam, eget ornare nisi placerat.\n\nCurabitur a ornare odio,
+        a pulvinar orci. Vestibulum volutpat lorem ac lacus pharetra, vel mattis nisi
+        hendrerit. Sed faucibus ligula et suscipit pulvinar. Aenean posuere pretium
+        erat at sodales. Curabitur imperdiet tortor nec mattis vestibulum. Sed augue
+        leo, posuere quis nulla a, finibus finibus neque. Aenean at gravida nisl.
+        Sed suscipit pharetra malesuada. Aenean sit amet ex id metus dictum vehicula
+        facilisis et tellus. Vestibulum interdum ante at ante tincidunt viverra. Quisque
+        malesuada magna quis massa tincidunt malesuada.","documentid":"77e7df34-8f9b-4f95-8eee-fc62ec70f37c","valuetruncated":false,"organisationid":"csiro","groupids":[],"type":"document","_links":{"self":{"href":"https://senaps.io/api/analysis/documentnodes/77e7df34-8f9b-4f95-8eee-fc62ec70f37c"},"value":{"href":"https://senaps.io/api/analysis/documentnodes/77e7df34-8f9b-4f95-8eee-fc62ec70f37c/value/"}}}'
+    headers:
+      Access-Control-Allow-Origin:
+      - '*'
+      Allow:
+      - OPTIONS, GET, POST, PUT
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '3229'
+      Content-Security-Policy-Report-Only:
+      - 'default-src ''self'' data: ''unsafe-inline'' ''unsafe-eval'' https://jira.csiro.au
+        https://www.google-analytics.com https://maps.google.com https://maps.googleapis.com'
+      Content-Type:
+      - application/json
+      Date:
+      - Mon, 14 Dec 2020 01:28:40 GMT
+      Expect-CT:
+      - max-age=0, enforce
+      Feature-Policy:
+      - accelerometer 'none'; ambient-light-sensor 'none'; autoplay 'none'; camera
+        'none'; encrypted-media 'none'; fullscreen 'self'; geolocation 'self'; gyroscope
+        'none'; magnetometer 'none'; microphone 'none'; midi 'none'; payment 'self';
+        picture-in-picture 'none'; speaker 'none'; sync-xhr 'self'; usb 'none'; vibrate
+        'none'; vr 'none';
+      Referrer-Policy:
+      - strict-origin-when-cross-origin
+      Via:
+      - kong/0.15.0
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-Kong-Proxy-Latency:
+      - '0'
+      X-Kong-Upstream-Latency:
+      - '42'
+      X-RateLimit-Limit-minute:
+      - '300'
+      X-RateLimit-Limit-second:
+      - '100'
+      X-RateLimit-Remaining-minute:
+      - '294'
+      X-RateLimit-Remaining-second:
+      - '97'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      User-Agent:
+      - python-requests/2.22.0
+    method: GET
+    uri: https://senaps.io/api/analysis/documentnodes/77e7df34-8f9b-4f95-8eee-fc62ec70f37c/value?apikey=05a3d68a92ee4b1b8a217fec8e01642c
+  response:
+    body:
+      string: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla aliquet
+        magna vel dapibus rutrum. Phasellus laoreet orci vel magna tristique, dictum
+        sodales arcu hendrerit. Nullam id euismod turpis. Vestibulum in nisi eu turpis
+        elementum aliquet eu ac nibh. Integer eget elit nec neque scelerisque euismod.
+        Morbi luctus turpis dictum lorem sodales, eget gravida nunc iaculis. Nulla
+        a diam scelerisque, elementum mi eget, ultrices lorem. Morbi ultrices, odio
+        et sollicitudin pulvinar, dolor ante lobortis mi, a semper elit velit vel
+        augue. Integer eu arcu cursus, eleifend purus ac, fringilla quam. Phasellus
+        ut lobortis mauris. Quisque viverra nisi gravida augue elementum scelerisque.
+        Aliquam pharetra iaculis est, viverra vestibulum mi tempor ut. Pellentesque
+        habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas.
+        Nulla elementum, purus sed posuere hendrerit, nisi metus cursus quam, eu placerat
+        quam libero vel metus.
+
+
+        Maecenas eu pellentesque mauris. Vestibulum consectetur diam eu augue vestibulum
+        posuere. Morbi congue nisl varius tempor convallis. Cras non semper odio.
+        Nullam mattis mauris eget sagittis fringilla. Sed tincidunt mi a massa accumsan
+        convallis. Praesent fringilla ante eu ante suscipit ornare.
+
+
+        Pellentesque nec luctus sem. Integer a magna at ex eleifend luctus. Quisque
+        nec arcu libero. Mauris tristique semper metus id facilisis. Vestibulum fermentum
+        eros eu quam pharetra, ut maximus turpis volutpat. Fusce aliquam ante nisi,
+        ut posuere ligula varius sit amet. Curabitur sagittis nibh vitae dolor viverra,
+        in suscipit metus consectetur. Nulla sed lorem sed nulla ultricies congue.
+
+
+        Sed ac est in dui rutrum convallis nec sed sem. Nullam non mauris metus. Ut
+        mattis ornare ex, congue cursus nunc placerat in. Quisque molestie maximus
+        massa, at commodo lacus efficitur nec. In sit amet porta augue, at tincidunt
+        libero. Duis a lectus tellus. Pellentesque sit amet lacus nec enim lobortis
+        suscipit. Pellentesque in sapien dignissim, scelerisque turpis sit amet, posuere
+        est. Nulla efficitur dolor quis nibh accumsan elementum. Ut ullamcorper tempus
+        lorem vel aliquet. Vestibulum sed nisl enim. Aenean semper vitae urna ut sagittis.
+        Quisque in eros lorem. Aenean at erat nec nisl rhoncus mattis cursus id mi.
+        Duis sagittis nulla id lorem aliquam, eget ornare nisi placerat.
+
+
+        Curabitur a ornare odio, a pulvinar orci. Vestibulum volutpat lorem ac lacus
+        pharetra, vel mattis nisi hendrerit. Sed faucibus ligula et suscipit pulvinar.
+        Aenean posuere pretium erat at sodales. Curabitur imperdiet tortor nec mattis
+        vestibulum. Sed augue leo, posuere quis nulla a, finibus finibus neque. Aenean
+        at gravida nisl. Sed suscipit pharetra malesuada. Aenean sit amet ex id metus
+        dictum vehicula facilisis et tellus. Vestibulum interdum ante at ante tincidunt
+        viverra. Quisque malesuada magna quis massa tincidunt malesuada.'
+    headers:
+      Access-Control-Allow-Origin:
+      - '*'
+      Allow:
+      - OPTIONS, GET, POST, PUT
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '2858'
+      Content-Security-Policy-Report-Only:
+      - 'default-src ''self'' data: ''unsafe-inline'' ''unsafe-eval'' https://jira.csiro.au
+        https://www.google-analytics.com https://maps.google.com https://maps.googleapis.com'
+      Content-Type:
+      - text/plain; charset=UTF-8
+      Date:
+      - Mon, 14 Dec 2020 01:28:40 GMT
+      Expect-CT:
+      - max-age=0, enforce
+      Feature-Policy:
+      - accelerometer 'none'; ambient-light-sensor 'none'; autoplay 'none'; camera
+        'none'; encrypted-media 'none'; fullscreen 'self'; geolocation 'self'; gyroscope
+        'none'; magnetometer 'none'; microphone 'none'; midi 'none'; payment 'self';
+        picture-in-picture 'none'; speaker 'none'; sync-xhr 'self'; usb 'none'; vibrate
+        'none'; vr 'none';
+      Referrer-Policy:
+      - strict-origin-when-cross-origin
+      Via:
+      - kong/0.15.0
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-Kong-Proxy-Latency:
+      - '0'
+      X-Kong-Upstream-Latency:
+      - '22'
+      X-RateLimit-Limit-minute:
+      - '300'
+      X-RateLimit-Limit-second:
+      - '100'
+      X-RateLimit-Remaining-minute:
+      - '293'
+      X-RateLimit-Remaining-second:
+      - '96'
+    status:
+      code: 200
+      message: OK
+version: 1

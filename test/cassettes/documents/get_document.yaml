@@ -1,0 +1,78 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      User-Agent:
+      - python-requests/2.22.0
+    method: GET
+    uri: https://senaps.io/api/analysis/documentnodes/a8f55cb0-62e7-4757-8da1-9492368b44b9?apikey=05a3d68a92ee4b1b8a217fec8e01642c
+  response:
+    body:
+      string: '{"value":"Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+        Duis sem massa, tristique eget ligula id, consectetur iaculis erat. Pellentesque
+        eu libero lacus. In varius eros id odio dictum scelerisque. Quisque dictum
+        libero ac quam posuere molestie. Donec pretium augue mi, quis facilisis metus
+        fringilla non. Nunc ac odio in mi laoreet consequat quis nec nibh. Mauris
+        pellentesque, odio vitae sagittis pulvinar, mi est condimentum ipsum, at sodales
+        augue urna non mi. Etiam commodo arcu dui, at dictum orci varius ac. Morbi
+        facilisis elementum elit, pharetra fermentum elit ornare et. Donec vestibulum
+        augue quis felis maximus, eget faucibus libero venenatis. Donec id vehicula
+        libero, ut dapibus lectus. Sed rhoncus libero sed suscipit pulvinar.\n\nCras
+        sagittis nec risus eget sollicitudin. Maecenas euismod mi ornare magna molestie
+        posuere. Aenean tempus tortor in eros fringilla, eu venenatis ante mattis.
+        Pellentesque non ultrices purus. Suspendisse id blandit elit. Aenean placerat
+        sapien quis arcu ","documentid":"a8f55cb0-62e7-4757-8da1-9492368b44b9","valuetruncated":true,"organisationid":"csiro","groupids":[],"type":"document","_links":{"self":{"href":"https://senaps.io/api/analysis/documentnodes/a8f55cb0-62e7-4757-8da1-9492368b44b9"},"value":{"href":"https://senaps.io/api/analysis/documentnodes/a8f55cb0-62e7-4757-8da1-9492368b44b9/value/"}}}'
+    headers:
+      Access-Control-Allow-Origin:
+      - '*'
+      Allow:
+      - OPTIONS, GET, POST, PUT
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '1364'
+      Content-Security-Policy-Report-Only:
+      - 'default-src ''self'' data: ''unsafe-inline'' ''unsafe-eval'' https://jira.csiro.au
+        https://www.google-analytics.com https://maps.google.com https://maps.googleapis.com'
+      Content-Type:
+      - application/json
+      Date:
+      - Mon, 14 Dec 2020 00:04:01 GMT
+      Expect-CT:
+      - max-age=0, enforce
+      Feature-Policy:
+      - accelerometer 'none'; ambient-light-sensor 'none'; autoplay 'none'; camera
+        'none'; encrypted-media 'none'; fullscreen 'self'; geolocation 'self'; gyroscope
+        'none'; magnetometer 'none'; microphone 'none'; midi 'none'; payment 'self';
+        picture-in-picture 'none'; speaker 'none'; sync-xhr 'self'; usb 'none'; vibrate
+        'none'; vr 'none';
+      Referrer-Policy:
+      - strict-origin-when-cross-origin
+      Via:
+      - kong/0.15.0
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-Kong-Proxy-Latency:
+      - '1'
+      X-Kong-Upstream-Latency:
+      - '32'
+      X-RateLimit-Limit-minute:
+      - '300'
+      X-RateLimit-Limit-second:
+      - '100'
+      X-RateLimit-Remaining-minute:
+      - '299'
+      X-RateLimit-Remaining-second:
+      - '99'
+    status:
+      code: 200
+      message: OK
+version: 1

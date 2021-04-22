@@ -129,7 +129,7 @@ class Client(object):
         """
         return self._get_resources(model.Document, skip, limit, page_size)
 
-    def get_document_value(self, document_or_id, path=None):
+    def get_document_value(self, document_or_id, path=None, force=False):
         """
         Obtain a document's value.
 
@@ -142,6 +142,8 @@ class Client(object):
             document_or_id: The document whose value is to be downloaded, either by ID or as an `as_client.Document`
                 instance.
             path: The path to a file into which to store the document value.
+            force: If false (the default), only download the document value from the API if it's not already available
+                in a passed as_client.Document instance. Otherwise, force download of the document value.
 
         Returns:
             If the `path` argument was *not* supplied, the document's value. Otherwise None.
@@ -151,11 +153,15 @@ class Client(object):
             ServerError: if an HTTP "server error" (5XX) status code is returned by the server.
         """
         if isinstance(document_or_id, model.Document):
-            if not document_or_id.value_truncated:
+            if not document_or_id.value_truncated and not force:
                 return document_or_id.value
+
             document_id = document_or_id.id
         else:
             document_id = document_or_id
+
+        if not document_id:
+            raise ValueError('Document ID must be supplied directly or via an as_client.Document instance.')
 
         url = util.append_path_to_url(self._base_url, model.Document._url_path, document_id, 'value')
         response = self.session.get(url=url)

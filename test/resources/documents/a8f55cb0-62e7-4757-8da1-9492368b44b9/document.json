@@ -1,0 +1,16 @@
+{
+	"value": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis sem massa, tristique eget ligula id, consectetur iaculis erat. Pellentesque eu libero lacus. In varius eros id odio dictum scelerisque. Quisque dictum libero ac quam posuere molestie. Donec pretium augue mi, quis facilisis metus fringilla non. Nunc ac odio in mi laoreet consequat quis nec nibh. Mauris pellentesque, odio vitae sagittis pulvinar, mi est condimentum ipsum, at sodales augue urna non mi. Etiam commodo arcu dui, at dictum orci varius ac. Morbi facilisis elementum elit, pharetra fermentum elit ornare et. Donec vestibulum augue quis felis maximus, eget faucibus libero venenatis. Donec id vehicula libero, ut dapibus lectus. Sed rhoncus libero sed suscipit pulvinar.\n\nCras sagittis nec risus eget sollicitudin. Maecenas euismod mi ornare magna molestie posuere. Aenean tempus tortor in eros fringilla, eu venenatis ante mattis. Pellentesque non ultrices purus. Suspendisse id blandit elit. Aenean placerat sapien quis arcu ",
+	"documentid": "a8f55cb0-62e7-4757-8da1-9492368b44b9",
+	"valuetruncated": true,
+	"organisationid": "csiro",
+	"groupids": [],
+	"type": "document",
+	"_links": {
+		"self": {
+			"href": "https://senaps.io/api/analysis/documentnodes/a8f55cb0-62e7-4757-8da1-9492368b44b9"
+		},
+		"value": {
+			"href": "https://senaps.io/api/analysis/documentnodes/a8f55cb0-62e7-4757-8da1-9492368b44b9/value/"
+		}
+	}
+}

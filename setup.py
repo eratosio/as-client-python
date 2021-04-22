@@ -27,8 +27,8 @@ setup(
         'requests >= 2.11.1'
     ],
     tests_require=[
-        'python-dotenv',
-        'vcrpy'
+        'python-dotenv == 0.17.0',
+        'responses == 0.13.2'
     ],
     classifiers=[
         'Development Status :: 3 - Alpha',

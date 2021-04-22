@@ -27,7 +27,6 @@ setup(
         'requests >= 2.11.1'
     ],
     tests_require=[
-        'python-dotenv == 0.17.0',
         'responses == 0.13.2'
     ],
     classifiers=[

@@ -8,3 +8,8 @@
 
 test.py
 
+/test/.env
+
+.venv
+.idea
+

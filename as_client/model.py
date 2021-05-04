@@ -3,11 +3,12 @@ from __future__ import division, print_function
 
 import collections, inspect
 
-_UNKNOWN = object() # Placeholder for indicating an unknown value (since None might be a valid value).
+_UNKNOWN = object()  # Placeholder for indicating an unknown value (since None might be a valid value).
 
 ################################################################################
 # Resource property classes.                                                   #
 ################################################################################
+
 
 class _Property(object):
     """
@@ -22,13 +23,15 @@ class _Property(object):
     retrieved previously, and tracking changes made to the attribute's value on
     the client side (where permitted).
     """
-    def __init__(self, json_name, from_json=lambda v:v, to_json=lambda v:v, default=None, writable=False, serialize=True):
+    def __init__(self, json_name, from_json=lambda v: v, to_json=lambda v: v, default=None, writable=False,
+                 serialize=True, serialise_as=None):
         self.json_name = json_name
         self.from_json = from_json
         self.to_json = to_json
         self.default = default
         self.writable = writable
         self.serialize = serialize
+        self.serialise_as = json_name if serialise_as is None else serialise_as
 
     def __get__(self, instance, owner):
         if instance is None:
@@ -52,10 +55,13 @@ class _Property(object):
 
             raise AttributeError('Property "{}" of class "{}" is not writable.'.format(descriptors[0][0], cls.__name__))
 
-        self.get_data(instance).local_value = value
+        self.set_value(instance, value)
 
-    def __del__(self, instance):
-        pass # TODO
+    def __delete__(self, instance):
+        pass  # TODO
+
+    def set_value(self, instance, value):
+        self.get_data(instance).local_value = value
 
     def get_data(self, instance):
         try:
@@ -75,7 +81,8 @@ class _Property(object):
 
         local_value = self.get_data(instance).local_value
         if local_value is not _UNKNOWN:
-            json[self.json_name] = self.to_json(local_value)
+            json[self.serialise_as] = self.to_json(local_value)
+
 
 class _IdProperty(_Property):
     """
@@ -89,6 +96,7 @@ class _IdProperty(_Property):
     """
     def __get__(self, instance, owner):
         return self if instance is None else self.get_data(instance).local_value
+
 
 class _EmbeddedProperty(_Property):
     """
@@ -112,6 +120,7 @@ class _EmbeddedProperty(_Property):
         local_value = self.get_data(instance).local_value
         if local_value is not _UNKNOWN:
             json.setdefault('_embedded', {})[self.json_name] = self.to_json(local_value)"""
+
 
 class _PropertyData(object):
     """
@@ -147,14 +156,12 @@ class _PropertyData(object):
 # Resource base classes.                                                       #
 ################################################################################
 
+
 class _Resource(object):
     """
     Base class for all the client's "resource" classes.
-
-    This class does very little, other than providing an algorithm for updating
-    a resource's property values when given a JSON object describing the
-    resource.
     """
+
     def _update(self, client, json):
         self._client = client
 
@@ -173,6 +180,19 @@ class _Resource(object):
             prop._serialise(self, result)
 
         return result
+
+    def copy(self):
+        type_ = self.__class__
+        copy = type_()
+
+        for prop_id, prop in inspect.getmembers(self.__class__, lambda m: isinstance(m, _Property)):
+            prop.set_value(copy, prop.__get__(self, type_))
+
+        setattr(copy, '_client', getattr(self, '_client', None))
+
+        return copy
+
+
 
 class _ResourceList(collections.Sequence):
     """
@@ -610,6 +630,32 @@ class BaseImage(_Resource):
     supported_providers = _Property('supportedproviders', set, list, set())
     host_environment = _Property('hostenvironment', lambda v: HostEnvironment(v), lambda v: v._serialise())
     tags = _Property('tags', set, list, set())
+
+
+class Document(_Resource):
+    """
+    Representation of the API's "document node" resource type.
+
+    If the `value_truncated` property is `False`, then the `value` property contains the document's value in full. If
+    `value_truncated` is True, then the `value` property contains only an initial segment of the document value, and the
+    full value of the document may be obtained using the client's `get_document_value` method.
+
+    Attributes:
+        id: the document node's unique ID.
+        value_truncated: True if the value returned by the value property has been truncated, otherwise false
+        organisation_id: The ID of the organisation that "owns" the document node.
+        group_ids: A set containing the IDs of the group(s) that contain the document node (if any).
+        value: The document node's value (possibly truncated).
+    """
+    _url_path = 'documentnodes'
+    _collection = 'documentnodes'
+
+    id = _IdProperty('documentid', writable=True, serialise_as='id')
+    value_truncated = _Property('valuetruncated', serialize=False)
+    organisation_id = _Property('organisationid', writable=True)
+    group_ids = _Property('groupids', set, list, set(), writable=True)
+    value = _Property('value', writable=True)
+
 
 class Model(_Resource):
     """

@@ -1,0 +1,702 @@
+{
+    "id": "eca25e91-e0c6-4099-8045-fdc4782fbd9a",
+    "name": "Stream Health Monitor Model - Test",
+    "description": "Full documentation can be found at https://confluence.csiro.au/display/sensorcloud/Stream+health+model.",
+    "organisationid": "test_organisation_X",
+    "groupids": [
+        "test_group_X"
+    ],
+    "runas": {
+        "roles": [
+            "test_role_X"
+        ]
+    },
+    "_links": {
+        "cancel": {
+            "href": "test.cancel.link.X"
+        },
+        "self": {
+            "href": "test.self.link.X"
+        }
+    },
+    "_embedded": {
+        "graph": {
+            "_embedded": {
+                "nodes": [{
+                        "modelid": "stream_health_monitor",
+                        "id": "stream_health_monitor_model",
+                        "label": "stream_health_monitor_model",
+                        "_links": {
+                            "model": {
+                                "href": "test.model.stream_health_monitor.link.X"
+                            }
+                        },
+                        "_embedded": {
+                            "model": {
+                                "version": "3.0.4",
+                                "method": "For each stream in the stream query, query its summary data. Detect any broken and resolved stream policies based on the age and/or value of the most recent observation and store outage state in usermetadata attached to the stream. A summary report is sent via email if an outage is detected or resolved.",
+                                "id": "stream_health_monitor",
+                                "name": "Stream Health Monitor Model",
+                                "description": "Full documentation can be found at https://confluence.csiro.au/display/sensorcloud/Stream+health+model.  Monitor streams defined in a stream query to detect absence of recent data or data out of range as defined in the configured data policy. If a stream fails the stream policy check, it's considered an outage. An email is sent whenever a policy is broken or restored.",
+                                "organisationid": "test_organisation_X",
+                                "groupids": [
+                                    "test_group_X"
+                                ],
+                                "_links": {
+                                    "self": {
+                                        "href": "test.model.stream_health_monitor.link.X"
+                                    }
+                                },
+                                "_embedded": {
+                                    "ports": [{
+                                            "portname": "report_error",
+                                            "required": false,
+                                            "description": "A comma-separated list of the IDs of streams that weren't checked due to an exception.  Please check permissions.",
+                                            "direction": "output",
+                                            "type": "document",
+                                            "operatorid": "stream_health_monitor"
+                                        },
+                                        {
+                                            "portname": "ignored",
+                                            "required": false,
+                                            "description": "A comma-separated list of the IDs of streams that are ignored due to their policy being overridden in stream metadata.",
+                                            "direction": "output",
+                                            "type": "document",
+                                            "operatorid": "stream_health_monitor"
+                                        },
+                                        {
+                                            "portname": "outage",
+                                            "required": false,
+                                            "description": "A comma-separated list of the IDs of streams that have broken the configured policy and will remain in this state until they are restored.",
+                                            "direction": "output",
+                                            "type": "document",
+                                            "operatorid": "stream_health_monitor"
+                                        },
+                                        {
+                                            "portname": "missing_data_logger_outliers_csv",
+                                            "required": false,
+                                            "description": "CSV document of outliers for each input stream - DEPRECATED",
+                                            "direction": "output",
+                                            "type": "document[]",
+                                            "operatorid": "stream_health_monitor"
+                                        },
+                                        {
+                                            "portname": "config_error",
+                                            "required": false,
+                                            "description": "A comma-separated list of the IDs of streams that weren't checked due to an exception.  Please check config.",
+                                            "direction": "output",
+                                            "type": "document",
+                                            "operatorid": "stream_health_monitor"
+                                        },
+                                        {
+                                            "portname": "no_data",
+                                            "required": false,
+                                            "description": "A comma-separated list of the IDs of streams that have no data.",
+                                            "direction": "output",
+                                            "type": "document",
+                                            "operatorid": "stream_health_monitor"
+                                        },
+                                        {
+                                            "portname": "latest_failed_streams_lt_min",
+                                            "required": false,
+                                            "description": "A comma-separated list of the IDs of streams that have broken the configured policy since last run.",
+                                            "direction": "output",
+                                            "type": "document",
+                                            "operatorid": "stream_health_monitor"
+                                        },
+                                        {
+                                            "portname": "stream_template_lookup",
+                                            "required": false,
+                                            "description": "A comma-separated document of user-defined stream lookup data to populate the template. If omitted, any custom fields in the template will not be filled via lookup.",
+                                            "direction": "input",
+                                            "type": "document",
+                                            "operatorid": "stream_health_monitor"
+                                        },
+                                        {
+                                            "portname": "latest_failed_streams",
+                                            "required": false,
+                                            "description": "A comma-separated list of the IDs of streams that have broken the configured policy since last run.",
+                                            "direction": "output",
+                                            "type": "document",
+                                            "operatorid": "stream_health_monitor"
+                                        },
+                                        {
+                                            "portname": "latest_restored_streams",
+                                            "required": false,
+                                            "description": "A comma-separated list of the IDs of streams that have had data restored since last run.",
+                                            "direction": "output",
+                                            "type": "document",
+                                            "operatorid": "stream_health_monitor"
+                                        },
+                                        {
+                                            "portname": "email_config",
+                                            "required": false,
+                                            "description": "A JSON-object containing the core email configuration. If omitted, no emails alerts are sent.",
+                                            "direction": "input",
+                                            "type": "document",
+                                            "operatorid": "stream_health_monitor"
+                                        },
+                                        {
+                                            "portname": "outage_lt_min",
+                                            "required": false,
+                                            "description": "A comma-separated list of the IDs of streams that have broken the configured policy and will remain in this state until they are restored.",
+                                            "direction": "output",
+                                            "type": "document",
+                                            "operatorid": "stream_health_monitor"
+                                        },
+                                        {
+                                            "portname": "outage_gt_max",
+                                            "required": false,
+                                            "description": "A comma-separated list of the IDs of streams that have broken the configured policy and will remain in this state until they are restored.",
+                                            "direction": "output",
+                                            "type": "document",
+                                            "operatorid": "stream_health_monitor"
+                                        },
+                                        {
+                                            "portname": "latest_failed_streams_gt_max",
+                                            "required": false,
+                                            "description": "A comma-separated list of the IDs of streams that have broken the configured policy since last run.",
+                                            "direction": "output",
+                                            "type": "document",
+                                            "operatorid": "stream_health_monitor"
+                                        },
+                                        {
+                                            "portname": "missing_data_logger_missing_data_csv",
+                                            "required": false,
+                                            "description": "CSV document of missing data for each input stream - DEPRECATED",
+                                            "direction": "output",
+                                            "type": "document[]",
+                                            "operatorid": "stream_health_monitor"
+                                        },
+                                        {
+                                            "portname": "streams_to_monitor",
+                                            "required": true,
+                                            "description": "A json structure to represent which streams to check and how they should be checked.  Refer to documentation.",
+                                            "direction": "input",
+                                            "type": "document",
+                                            "operatorid": "stream_health_monitor"
+                                        },
+                                        {
+                                            "portname": "html_template",
+                                            "required": false,
+                                            "description": "A Python Jinja2 template for html-format email alerts. If omitted, a default template is used.",
+                                            "direction": "input",
+                                            "type": "document",
+                                            "operatorid": "stream_health_monitor"
+                                        },
+                                        {
+                                            "portname": "text_template",
+                                            "required": false,
+                                            "description": "A Python Jinja2 template for text-format email alerts. If omitted, a default template is used.",
+                                            "direction": "input",
+                                            "type": "document",
+                                            "operatorid": "stream_health_monitor"
+                                        },
+                                        {
+                                            "portname": "ok",
+                                            "required": false,
+                                            "description": "A comma-separated list of the IDs of streams that pass the policy test.",
+                                            "direction": "output",
+                                            "type": "document",
+                                            "operatorid": "stream_health_monitor"
+                                        },
+                                        {
+                                            "portname": "missing_data_logger_output_summary",
+                                            "required": false,
+                                            "description": "Report of the missing data statistics",
+                                            "direction": "output",
+                                            "type": "document[]",
+                                            "operatorid": "stream_health_monitor"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "documentid": "ignored_node_id_X",
+                        "id": "ignored_node",
+                        "label": "ignored_node",
+                        "_embedded": {
+                            "datanode": {
+                                "documentid": "ignored_node_id_X",
+                                "valuetruncated": false,
+                                "organisationid": "dch",
+                                "groupids": [],
+                                "type": "document",
+                                "_links": {
+                                    "self": {
+                                        "href": "test_api_base_url_X/api/analysis/documentnodes/ignored_node_id_X"
+                                    },
+                                    "value": {
+                                        "href": "test_api_base_url_X/api/analysis/documentnodes/ignored_node_id_X/value/"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "id": "missing_data_logger_outliers_csv_node",
+                        "label": "missing_data_logger_outliers_csv_node",
+                        "_embedded": {
+                            "collection": [{
+                                "documentid": "d3e363ab-e472-4fc3-b7bf-50851370a667",
+                                "valuetruncated": false,
+                                "organisationid": "dch",
+                                "groupids": [],
+                                "type": "document",
+                                "_links": {
+                                    "self": {
+                                        "href": "https://senaps.io/api/analysis/documentnodes/d3e363ab-e472-4fc3-b7bf-50851370a667"
+                                    },
+                                    "value": {
+                                        "href": "https://senaps.io/api/analysis/documentnodes/d3e363ab-e472-4fc3-b7bf-50851370a667/value/"
+                                    }
+                                }
+                            }]
+                        }
+                    },
+                    {
+                        "documentid": "7c37e9e7-c9ce-4015-b43f-0c5e9f154db7",
+                        "id": "outage_node",
+                        "label": "outage_node",
+                        "_embedded": {
+                            "datanode": {
+                                "value": "stream_A,stream_E,stream_F",
+                                "documentid": "7c37e9e7-c9ce-4015-b43f-0c5e9f154db7",
+                                "valuetruncated": false,
+                                "organisationid": "dch",
+                                "groupids": [
+                                    "cbis-tier-a-workflows"
+                                ],
+                                "type": "document",
+                                "_links": {
+                                    "self": {
+                                        "href": "test_api_base_url_X/api/analysis/documentnodes/7c37e9e7-c9ce-4015-b43f-0c5e9f154db7"
+                                    },
+                                    "value": {
+                                        "href": "test_api_base_url_X/api/analysis/documentnodes/7c37e9e7-c9ce-4015-b43f-0c5e9f154db7/value/"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "documentid": "email_config_node_X",
+                        "id": "email_config_node",
+                        "label": "email_config_node",
+                        "_embedded": {
+                            "datanode": {
+                                "value": "{}",
+                                "documentid": "email_config_node_X",
+                                "valuetruncated": false,
+                                "organisationid": "dch",
+                                "groupids": [],
+                                "type": "document",
+                                "_links": {
+                                    "self": {
+                                        "href": "test_api_base_url_X/api/analysis/documentnodes/email_config_node_X"
+                                    },
+                                    "value": {
+                                        "href": "test_api_base_url_X/api/analysis/documentnodes/email_config_node_X/value/"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "id": "missing_data_logger_output_summary_node",
+                        "label": "missing_data_logger_output_summary_node",
+                        "_embedded": {
+                            "collection": [{
+                                "value": "{\n    \"dch.sbs.CSIRO_Black_Mountain.Building_279.B279_W_IRRIGATION.volume_litre_PT30M\": \"CSIRO_Black_Mountain.shm.dch.sbs.CSIRO_Black_Mountain.Building_279.B279_W_IRRIGATION.volume_litre_PT30M.stream.metrics\",\n    \"dch.sbs.CSIRO_Black_Mountain.Building_279.B279_W_MAIN.volume_litre_PT30M\": \"CSIRO_Black_Mountain.shm.dch.sbs.CSIRO_Black_Mountain.Building_279.B279_W_MAIN.volume_litre_PT30M.stream.metrics\",\n    \"dch.sbs.CSIRO_Black_Mountain.Building_60.B060_W_MAIN.volume_litre_PT30M\": \"CSIRO_Black_Mountain.shm.dch.sbs.CSIRO_Black_Mountain.Building_60.B060_W_MAIN.volume_litre_PT30M.stream.metrics\",\n    \"dch.sbs.CSIRO_Black_Mountain.Building_61.B061_W_MAIN_61_65.volume_litre_PT30M\": \"CSIRO_Black_Mountain.shm.dch.sbs.CSIRO_Black_Mountain.Building_61.B061_W_MAIN_61_65.volume_litre_PT30M.stream.metrics\",\n    \"dch.sbs.CSIRO_Black_Mountain.Building_72.B072_W_POTTING_PRECINCT.volume_litre_PT30M\": \"CSIRO_Black_Mountain.shm.dch.sbs.CSIRO_Black_Mountain.Building_72.B072_W_POTTING_PRECINCT.volume_litre",
+                                "documentid": "d4e214cb-37e1-432e-84f7-4cb3af18b861",
+                                "valuetruncated": true,
+                                "organisationid": "dch",
+                                "groupids": [],
+                                "type": "document",
+                                "_links": {
+                                    "self": {
+                                        "href": "https://senaps.io/api/analysis/documentnodes/d4e214cb-37e1-432e-84f7-4cb3af18b861"
+                                    },
+                                    "value": {
+                                        "href": "https://senaps.io/api/analysis/documentnodes/d4e214cb-37e1-432e-84f7-4cb3af18b861/value/"
+                                    }
+                                }
+                            }]
+                        }
+                    },
+                    {
+                        "id": "missing_data_logger_missing_data_csv_node",
+                        "label": "missing_data_logger_missing_data_csv_node",
+                        "_embedded": {
+                            "collection": [{
+                                "documentid": "65112c49-93fe-4026-94a7-9f53ad113942",
+                                "valuetruncated": false,
+                                "organisationid": "dch",
+                                "groupids": [],
+                                "type": "document",
+                                "_links": {
+                                    "self": {
+                                        "href": "https://senaps.io/api/analysis/documentnodes/65112c49-93fe-4026-94a7-9f53ad113942"
+                                    },
+                                    "value": {
+                                        "href": "https://senaps.io/api/analysis/documentnodes/65112c49-93fe-4026-94a7-9f53ad113942/value/"
+                                    }
+                                }
+                            }]
+                        }
+                    },
+                    {
+                        "documentid": "html_template_node_id_X",
+                        "id": "html_template_node",
+                        "label": "html_template_node",
+                        "_embedded": {
+                            "datanode": {
+                                "value": "{#- Set the columns we wish to display -#}\n{%- set display_cols =  [(\"Missing Data Logger\", \"missing_percent\"), (\"Missing Data Logger\", \"outlier_percent\"), (\"Stream Metadata\", \"Metering\"), (\"Stream Metadata\", \"High Priority\"), (\"Stream Metadata\", \"NMI/Logger SN\"), (\"Stream Metadata\", \"Meter SN\")]  -%}\n{#- Set the maximum number of rows we wish to display in the report -#}\n{%- set n_rows = 20 -%}\n{#- Set table output type, either text or html -#}\n{%- set table_type = \"html\" -%}\n\n<h3>\n  {{ report_title }}\n</h3>\n<p>\n  {{ report_message }}\n</p>\n\n{#- Alias missing data logger streams for convenience -#}\n{%- if missing_data_logger is defined and missing_data_logger.get(\"streams\", {}) | length > 0 -%}\n<p>\n  Data analysed between {{ format_timestamp(missing_data_logger.get(\"period\")[\"start\"]) }} and {{ format_timestamp(missing_data_logger.get(\"period\")[\"end\"]) }}\n</p>\n{%- set mdl_streams = missing_data_logger.get(\"streams\", {}) -%}\n{% else %}\n  {%- set mdl_streams = {} -%}\n{%- endif -%}\n\n<p>\n ",
+                                "documentid": "html_template_node_id_X",
+                                "valuetruncated": true,
+                                "organisationid": "dch",
+                                "groupids": [],
+                                "type": "document",
+                                "_links": {
+                                    "self": {
+                                        "href": "test_api_base_url_X/api/analysis/documentnodes/html_template_node_id_X"
+                                    },
+                                    "value": {
+                                        "href": "test_api_base_url_X/api/analysis/documentnodes/html_template_node_id_X/value/"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "documentid": "no_data_node_id_X",
+                        "id": "no_data_node",
+                        "label": "no_data_node",
+                        "_embedded": {
+                            "datanode": {
+                                "documentid": "no_data_node_id_X",
+                                "valuetruncated": false,
+                                "organisationid": "dch",
+                                "groupids": [],
+                                "type": "document",
+                                "_links": {
+                                    "self": {
+                                        "href": "test_api_base_url_X/api/analysis/documentnodes/no_data_node_id_X"
+                                    },
+                                    "value": {
+                                        "href": "test_api_base_url_X/api/analysis/documentnodes/no_data_node_id_X/value/"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "documentid": "5e399a66-adbf-4953-bd2a-8d4cddf2f728",
+                        "id": "stream_template_lookup_node",
+                        "label": "stream_template_lookup_node",
+                        "_embedded": {
+                            "datanode": {
+                                "value": "streamid,Metering,High Priority,NMI/Logger SN,Meter SN\nstream_A,meter_A,\"Yes, Tier A Building\",4564464654,654632012\nstream_B,meter_A,\"Yes, Tier A Building\",4564464654,654632012\nstream_C,meter_B,\"No\",7842132455,213453315\nstream_D,meter_B,\"No\",7842132455,213453315\nstream_E,meter_C,\"Yes, Tier A Building\",1264873543,687631354\nstream_F,meter_C,\"Yes, Tier A Building\",1264873543,687631354",
+                                "documentid": "5e399a66-adbf-4953-bd2a-8d4cddf2f728",
+                                "valuetruncated": true,
+                                "organisationid": "dch",
+                                "groupids": [],
+                                "type": "document",
+                                "_links": {
+                                    "self": {
+                                        "href": "test_api_base_url_X/api/analysis/documentnodes/5e399a66-adbf-4953-bd2a-8d4cddf2f728"
+                                    },
+                                    "value": {
+                                        "href": "test_api_base_url_X/api/analysis/documentnodes/5e399a66-adbf-4953-bd2a-8d4cddf2f728/value/"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "documentid": "text_template_node_id_X",
+                        "id": "text_template_node",
+                        "label": "text_template_node",
+                        "_embedded": {
+                            "datanode": {
+                                "value": "{#- Set the columns we wish to display -#}\n{%- set display_cols =  [(\"Missing Data Logger\", \"missing_percent\"), (\"Missing Data Logger\", \"outlier_percent\"), (\"Stream Metadata\", \"Metering\"), (\"Stream Metadata\", \"High Priority\"), (\"Stream Metadata\", \"NMI/Logger SN\"), (\"Stream Metadata\", \"Meter SN\")]  -%}\n{#- Set the maximum number of rows we wish to display in the report -#}\n{%- set n_rows = 20 -%}\n{#- Set table output type, either text or html -#}\n{%- set table_type = text -%}\n\n{{ report_title|upper }}\n\n{{ report_message }}\n{# ------------------------------------------------------------------- #}\n{#- Alias missing data logger streams for convenience -#}\n{%- if missing_data_logger is defined and missing_data_logger.get(\"streams\", {}) | length > 0 %}\nData analysed between {{ format_timestamp(missing_data_logger.get(\"period\")[\"start\"]) }} and {{ format_timestamp(missing_data_logger.get(\"period\")[\"end\"]) }}\n{%- set mdl_streams = missing_data_logger.get(\"streams\", {}) -%}\n{% else %}\n{%- set m",
+                                "documentid": "text_template_node_id_X",
+                                "valuetruncated": true,
+                                "organisationid": "dch",
+                                "groupids": [],
+                                "type": "document",
+                                "_links": {
+                                    "self": {
+                                        "href": "test_api_base_url_X/api/analysis/documentnodes/text_template_node_id_X"
+                                    },
+                                    "value": {
+                                        "href": "test_api_base_url_X/api/analysis/documentnodes/text_template_node_id_X/value/"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "documentid": "report_error_node_X",
+                        "id": "report_error_node",
+                        "label": "report_error_node",
+                        "_embedded": {
+                            "datanode": {
+                                "value": "",
+                                "documentid": "report_error_node_X",
+                                "valuetruncated": false,
+                                "organisationid": "dch",
+                                "groupids": [],
+                                "type": "document",
+                                "_links": {
+                                    "self": {
+                                        "href": "test_api_base_url_X/api/analysis/documentnodes/report_error_node_X"
+                                    },
+                                    "value": {
+                                        "href": "test_api_base_url_X/api/analysis/documentnodes/report_error_node_X/value/"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "documentid": "latest_restored_streams_node_X",
+                        "id": "latest_restored_streams_node",
+                        "label": "latest_restored_streams_node",
+                        "_embedded": {
+                            "datanode": {
+                                "value": "",
+                                "documentid": "latest_restored_streams_node_X",
+                                "valuetruncated": false,
+                                "organisationid": "dch",
+                                "groupids": [],
+                                "type": "document",
+                                "_links": {
+                                    "self": {
+                                        "href": "test_api_base_url_X/api/analysis/documentnodes/latest_restored_streams_node_X"
+                                    },
+                                    "value": {
+                                        "href": "test_api_base_url_X/api/analysis/documentnodes/latest_restored_streams_node_X/value/"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "documentid": "latest_failed_node_id_X",
+                        "id": "latest_failed_streams_node",
+                        "label": "latest_failed_streams_node",
+                        "_embedded": {
+                            "datanode": {
+                                "value": "",
+                                "documentid": "latest_failed_node_id_X",
+                                "valuetruncated": false,
+                                "organisationid": "dch",
+                                "groupids": [],
+                                "type": "document",
+                                "_links": {
+                                    "self": {
+                                        "href": "test_api_base_url_X/api/analysis/documentnodes/latest_failed_node_id_X"
+                                    },
+                                    "value": {
+                                        "href": "test_api_base_url_X/api/analysis/documentnodes/latest_failed_node_id_X/value/"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "documentid": "streams_to_monitor_node_id_X",
+                        "id": "streams_to_monitor_node",
+                        "label": "streams_to_monitor_node",
+                        "_embedded": {
+                            "datanode": {
+                                "value": "{...",
+                                "documentid": "streams_to_monitor_node_id_X",
+                                "valuetruncated": true,
+                                "organisationid": "dch",
+                                "groupids": [
+                                    "cbis-tier-a-workflows"
+                                ],
+                                "type": "document",
+                                "_links": {
+                                    "self": {
+                                        "href": "test_api_base_url_X/api/analysis/documentnodes/streams_to_monitor_node_id_X"
+                                    },
+                                    "value": {
+                                        "href": "test_api_base_url_X/api/analysis/documentnodes/streams_to_monitor_node_id_X/value/"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "documentid": "config_error_node_id_X",
+                        "id": "config_error_node",
+                        "label": "config_error_node",
+                        "_embedded": {
+                            "datanode": {
+                                "documentid": "config_error_node_id_X",
+                                "valuetruncated": false,
+                                "organisationid": "dch",
+                                "groupids": [],
+                                "type": "document",
+                                "_links": {
+                                    "self": {
+                                        "href": "test_api_base_url_X/api/analysis/documentnodes/config_error_node_id_X"
+                                    },
+                                    "value": {
+                                        "href": "test_api_base_url_X/api/analysis/documentnodes/config_error_node_id_X/value/"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "documentid": "0d491f54-a8f9-46fa-9491-b9a69e6e0fc3",
+                        "id": "ok_node",
+                        "label": "ok_node",
+                        "_embedded": {
+                            "datanode": {
+                                "value": "stream_B,stream_C,stream_D",
+                                "documentid": "0d491f54-a8f9-46fa-9491-b9a69e6e0fc3",
+                                "valuetruncated": false,
+                                "organisationid": "dch",
+                                "groupids": [],
+                                "type": "document",
+                                "_links": {
+                                    "self": {
+                                        "href": "test_api_base_url_X/api/analysis/documentnodes/0d491f54-a8f9-46fa-9491-b9a69e6e0fc3"
+                                    },
+                                    "value": {
+                                        "href": "test_api_base_url_X/api/analysis/documentnodes/0d491f54-a8f9-46fa-9491-b9a69e6e0fc3/value/"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ],
+                "connections": [{
+                        "source": {
+                            "node": "stream_template_lookup_node"
+                        },
+                        "target": {
+                            "port": "stream_template_lookup",
+                            "node": "stream_health_monitor_model"
+                        }
+                    },
+                    {
+                        "source": {
+                            "port": "config_error",
+                            "node": "stream_health_monitor_model"
+                        },
+                        "target": {
+                            "node": "config_error_node"
+                        }
+                    },
+                    {
+                        "source": {
+                            "port": "outage",
+                            "node": "stream_health_monitor_model"
+                        },
+                        "target": {
+                            "node": "outage_node"
+                        }
+                    },
+                    {
+                        "source": {
+                            "port": "no_data",
+                            "node": "stream_health_monitor_model"
+                        },
+                        "target": {
+                            "node": "no_data_node"
+                        }
+                    },
+                    {
+                        "source": {
+                            "node": "email_config_node"
+                        },
+                        "target": {
+                            "port": "email_config",
+                            "node": "stream_health_monitor_model"
+                        }
+                    },
+                    {
+                        "source": {
+                            "node": "streams_to_monitor_node"
+                        },
+                        "target": {
+                            "port": "streams_to_monitor",
+                            "node": "stream_health_monitor_model"
+                        }
+                    },
+                    {
+                        "source": {
+                            "node": "html_template_node"
+                        },
+                        "target": {
+                            "port": "html_template",
+                            "node": "stream_health_monitor_model"
+                        }
+                    },
+                    {
+                        "source": {
+                            "port": "ok",
+                            "node": "stream_health_monitor_model"
+                        },
+                        "target": {
+                            "node": "ok_node"
+                        }
+                    },
+                    {
+                        "source": {
+                            "port": "latest_restored_streams",
+                            "node": "stream_health_monitor_model"
+                        },
+                        "target": {
+                            "node": "latest_restored_streams_node"
+                        }
+                    },
+                    {
+                        "source": {
+                            "port": "report_error",
+                            "node": "stream_health_monitor_model"
+                        },
+                        "target": {
+                            "node": "report_error_node"
+                        }
+                    },
+                    {
+                        "source": {
+                            "port": "ignored",
+                            "node": "stream_health_monitor_model"
+                        },
+                        "target": {
+                            "node": "ignored_node"
+                        }
+                    },
+                    {
+                        "source": {
+                            "port": "latest_failed_streams",
+                            "node": "stream_health_monitor_model"
+                        },
+                        "target": {
+                            "node": "latest_failed_streams_node"
+                        }
+                    },
+                    {
+                        "source": {
+                            "node": "text_template_node"
+                        },
+                        "target": {
+                            "port": "text_template",
+                            "node": "stream_health_monitor_model"
+                        }
+                    }
+                ]
+            }
+        }
+    }
+}

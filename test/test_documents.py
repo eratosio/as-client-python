@@ -41,6 +41,10 @@ class DocumentTests(unittest.TestCase):
 
         self.client = Client(base_url, session)
 
+    @staticmethod
+    def _get_document_folder(document_id):
+        return os.path.join('test', 'resources', 'documents', document_id)
+
     def test_get_document(self):
         document_id = 'a8f55cb0-62e7-4757-8da1-9492368b44b9'
 
@@ -95,7 +99,7 @@ class DocumentTests(unittest.TestCase):
 
     def set_document_from_local_file(self, document_or_id, local_file_name, organisation_id=None):
         document = self.client.set_document_value(document_or_id,
-                                                  path=os.path.join('resources', 'documents', local_file_name),
+                                                  path=DocumentTests._get_document_folder(local_file_name),
                                                   organisation_id=organisation_id)
 
         if isinstance(document_or_id, Document):
@@ -112,7 +116,7 @@ class DocumentTests(unittest.TestCase):
         return document
 
     def the_document_value_matches_local_file(self, document_or_id, local_file_name):
-        with open(os.path.join('resources', 'documents', local_file_name)) as f:
+        with open(DocumentTests._get_document_folder(local_file_name)) as f:
             expected_value = f.read()
 
         actual_value = self.client.get_document_value(document_or_id)
@@ -120,9 +124,11 @@ class DocumentTests(unittest.TestCase):
         self.assertEqual(expected_value.rstrip(), actual_value.rstrip())
 
     def with_the_test_document(self, document_id):
-        with open(os.path.join('resources', 'documents', document_id, 'document.json'), 'r') as f:
+        document_folder = DocumentTests._get_document_folder(document_id)
+
+        with open(os.path.join(document_folder, 'document.json'), 'r') as f:
             document = self._documents[document_id] = json.load(f)
-        with open(os.path.join('resources', 'documents', document_id, 'value.txt'), 'r') as f:
+        with open(os.path.join(document_folder, 'value.txt'), 'r') as f:
             document['value'] = f.read()
 
     def with_the_document(self, document):

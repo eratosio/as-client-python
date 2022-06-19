@@ -339,7 +339,19 @@ class _GraphNode(object):
         return { 'id': self.id, 'label': self.label }
 
     @staticmethod
-    def _deserialise(json):
+    def _validate_id(json, in_collection=False):
+        if json.get("id") is None and not in_collection:
+            raise ValueError("Node ID must be specified.")
+
+    @staticmethod
+    def _deserialise(json, in_collection=False):
+
+        if "collection" in json.get("_embedded", {}):
+            return CollectionNode._deserialise(json)
+
+        # Ensure that the node has an ID if we're not in a collection
+        _GraphNode._validate_id(json, in_collection)
+
         if 'modelid' in json:
             return ModelNode._deserialise(json)
         elif 'documentid' in json or 'value' in json:
@@ -350,6 +362,8 @@ class _GraphNode(object):
             return MultiStreamNode._deserialise(json)
         elif 'dataset' in json:
             return GridNode._deserialise(json)
+        else:
+            raise ValueError(f"Unrecognised node type {json}")
 
 class ModelNode(_GraphNode):
     def __init__(self, id, label, model_id):
@@ -362,7 +376,7 @@ class ModelNode(_GraphNode):
 
     @staticmethod
     def _deserialise(json):
-        return ModelNode(json['id'], json.get('label'), json['modelid'])
+        return ModelNode(json.get("id"), json.get('label'), json['modelid'])
 
 class DocumentNode(_GraphNode):
     def __init__(self, id, label, value=None, document_id=None):
@@ -384,7 +398,7 @@ class DocumentNode(_GraphNode):
 
     @staticmethod
     def _deserialise(json):
-        return DocumentNode(json['id'], json.get('label'), json.get('_embedded', {}).get('datanode', {}).get('value'), json.get('documentid'))
+        return DocumentNode(json.get("id"), json.get('label'), json.get('_embedded', {}).get('datanode', {}).get('value'), json.get('documentid'))
 
 class StreamNode(_GraphNode):
     def __init__(self, id, label, stream_id):
@@ -397,7 +411,7 @@ class StreamNode(_GraphNode):
 
     @staticmethod
     def _deserialise(json):
-        return StreamNode(json['id'], json.get('label'), json['streamid'])
+        return StreamNode(json.get("id"), json.get('label'), json['streamid'])
 
 class MultiStreamNode(_GraphNode):
     def __init__(self, id, label, stream_ids):
@@ -410,7 +424,7 @@ class MultiStreamNode(_GraphNode):
 
     @staticmethod
     def _deserialise(json):
-        return MultiStreamNode(json['id'], json.get('label'), json['streamids'])
+        return MultiStreamNode(json.get("id"), json.get('label'), json['streamids'])
 
 class GridNode(_GraphNode):
     def __init__(self, id, label, dataset, catalog=None):
@@ -428,7 +442,21 @@ class GridNode(_GraphNode):
 
     @staticmethod
     def _deserialise(json):
-        return GridNode(json['id'], json.get('label'), json['dataset'], json.get('catalog'))
+        return GridNode(json.get("id"), json.get('label'), json['dataset'], json.get('catalog'))
+
+class CollectionNode(_GraphNode):
+    def __init__(self, id, label, collection):
+        super(CollectionNode, self).__init__(id, label)
+
+        self.collection = collection
+
+    def _serialise(self):
+        return dict(super(CollectionNode, self)._serialise(), collection=self.collection)
+
+    @staticmethod
+    def _deserialise(json):
+        return CollectionNode(json["id"], json.get("label"), [_GraphNode._deserialise(v, True) for v in json.get("_embedded", {}).get("collection")])
+
 
 class GraphConnection(object):
     def __init__(self, source_node, target_node, source_port=None, target_port=None):

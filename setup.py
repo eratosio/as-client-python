@@ -18,6 +18,7 @@ setup(
     author='Mac Coombe',
     author_email='mac.coombe@csiro.au',
     description='Analysis Services Client',
+    test_suite="test",
     # TODO: license = '',
     keywords='Analysis-Services',
     url='https://bitbucket.csiro.au/projects/SC/repos/as-client-python/browse',

@@ -194,7 +194,7 @@ class _Resource(object):
 
 
 
-class _ResourceList(collections.Sequence):
+class _ResourceList(collections.abc.Sequence):
     """
     A thin wrapper around a list of resource class instances.
 
@@ -222,7 +222,7 @@ class _ResourceList(collections.Sequence):
     count = property(lambda self: self._count)
     total_count = property(lambda self: self._total_count)
 
-class _ResourceCollection(collections.Sequence):
+class _ResourceCollection(collections.abc.Sequence):
     """
     Implementation of a sequence of resource instances that transparently
     handles paging of requests to the API.

@@ -65,9 +65,8 @@ class WorkflowTests(unittest.TestCase):
             self.assertTrue(node.collection[0].document_id is not None, f'Collection node {node.id} contains a document without a document id')
             self.assertTrue(node.collection[0].id is None, f'Collection node {node.id} contains a document with an id')
 
-
     def with_the_test_workflow(self, workflow_id):
-        with open(WorkflowTests._get_workflow_folder(workflow_id), 'r') as f:
+        with open(os.path.join(WorkflowTests._get_workflow_folder(workflow_id), "workflow.json"), 'r') as f:
             self._workflows[workflow_id] = json.load(f)
 
     def with_the_workflow(self, workflow):

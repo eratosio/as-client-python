@@ -1,0 +1,28 @@
+
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "as_client"
+dynamic = ["version"]
+authors = [{ name = "Mac Coombe", email = "mac.coombe@csiro.au" }]
+description = "Analysis Services Client"
+readme = "readme.md"
+requires-python = ">=2.7"
+keywords = ["Analysis-Services"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Topic :: Scientific/Engineering :: Information Analysis",
+  "Intended Audience :: Developers",
+  "Natural Language :: English",
+  "Operating System :: POSIX",
+  "Programming Language :: Python :: 2.7",
+]
+dependencies = ["requests >=2.11.1"]
+
+[project.optional-dependencies]
+test = ["responses >=0.13.2,<1.0.0"]
+
+[project.urls]
+Homepage = "https://bitbucket.csiro.au/projects/SC/repos/as-client-python/browse"

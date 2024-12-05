@@ -32,3 +32,9 @@ test = ["responses >=0.13.2,<1.0.0"]
 
 [project.urls]
 Homepage = "https://bitbucket.csiro.au/projects/SC/repos/as-client-python/browse"
+
+[tool.hatch.version]
+path = "as_client/version.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["as_client"]

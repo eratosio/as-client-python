@@ -23,7 +23,6 @@ setup(
     keywords='Analysis-Services',
     url='https://bitbucket.csiro.au/projects/SC/repos/as-client-python/browse',
     packages=find_packages(),
-    long_description=read('readme.md'),
     install_requires=[
         'requests >= 2.11.1'
     ],

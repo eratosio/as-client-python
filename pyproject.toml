@@ -7,6 +7,7 @@ name = "eratos-as-client"
 dynamic = ["version"]
 authors = [{ name = "Mac Coombe", email = "mac.coombe@csiro.au" }]
 maintainers = [{ name = "Eratos", email = "support@eratos.com" }]
+license = { text = "MIT License" }
 description = "Analysis Services Client"
 readme = "readme.md"
 requires-python = ">=3.7"
@@ -15,6 +16,7 @@ classifiers = [
   "Development Status :: 3 - Alpha",
   "Topic :: Scientific/Engineering :: Information Analysis",
   "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
   "Natural Language :: English",
   "Operating System :: POSIX",
   "Programming Language :: Python :: 3",

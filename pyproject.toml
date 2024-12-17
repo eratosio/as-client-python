@@ -1,0 +1,40 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "eratos-as-client"
+dynamic = ["version"]
+authors = [{ name = "Mac Coombe", email = "mac.coombe@csiro.au" }]
+maintainers = [{ name = "Eratos", email = "support@eratos.com" }]
+description = "Analysis Services Client"
+readme = "readme.md"
+requires-python = ">=3.7"
+keywords = ["Analysis-Services"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Topic :: Scientific/Engineering :: Information Analysis",
+  "Intended Audience :: Developers",
+  "Natural Language :: English",
+  "Operating System :: POSIX",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.7",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+]
+dependencies = ["requests >=2.11.1"]
+
+[project.optional-dependencies]
+test = ["responses >=0.13.2,<1.0.0"]
+
+[project.urls]
+Homepage = "https://bitbucket.csiro.au/projects/SC/repos/as-client-python/browse"
+
+[tool.hatch.version]
+path = "as_client/version.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["as_client"]

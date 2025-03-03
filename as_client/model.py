@@ -756,8 +756,8 @@ class Workflow(_Resource):
     organisation_id = _Property('organisationid', writable=True)
     group_ids = _Property('groupids', set, list, set(), writable=True)
     graph = _EmbeddedProperty('graph', lambda v: Graph(v), lambda v: v._serialise(), Graph())
-    run_as = _EmbeddedProperty('runas', lambda v: RunAs(v), lambda v: v._serialise(), RunAs({'roles': []}))
-    logs_truncated_to = _Property('logsTruncatedTo')
+    run_as = _Property('runas', writable=True) 
+    logs_truncated_to = _Property('logsTruncatedTo', serialize=False)
 
     def save(self, client=None):
         """

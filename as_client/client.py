@@ -513,7 +513,7 @@ class Client(object):
 
         putting = (method == 'PUT')
 
-        resource_json = resource._serialise(include_id=putting)
+        resource_json = resource._serialise(include_id=False)
         path_parts = [resource.__class__._url_path]
         if putting:
             path_parts.append(resource.id)

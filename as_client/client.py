@@ -226,7 +226,7 @@ class Client(object):
         elif (document.organisation_id == '') or not isinstance(document.organisation_id, str):
             raise ValueError('Invalid organisation ID')
 
-        return self._upload_resource(document, 'PUT')
+        return self._upload_resource(document, 'PUT', include_id = True)
 
     def get_model(self, id):
         """
@@ -500,7 +500,7 @@ class Client(object):
     def _post_resource(self, resource):
         return self._upload_resource(resource, method='POST')
 
-    def _upload_resource(self, resource, method=None):
+    def _upload_resource(self, resource, method=None, include_id : bool = False):
         assert hasattr(type(resource), '_url_path')
         assert callable(getattr(resource, '_serialise', None))
 
@@ -513,7 +513,7 @@ class Client(object):
 
         putting = (method == 'PUT')
 
-        resource_json = resource._serialise(include_id=False)
+        resource_json = resource._serialise(include_id=include_id)
         path_parts = [resource.__class__._url_path]
         if putting:
             path_parts.append(resource.id)

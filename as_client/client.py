@@ -379,7 +379,7 @@ class Client(object):
             RequestError: if an HTTP "client error" (4XX) status code is returned by the server.
             ServerError: if an HTTP "server error" (5XX) status code is returned by the server.
         """
-        return self._upload_resource(workflow)
+        return self._upload_resource(workflow, include_id = False)
 
     def run_workflow(self, workflow, debug=False):
         """
@@ -500,7 +500,7 @@ class Client(object):
     def _post_resource(self, resource):
         return self._upload_resource(resource, method='POST')
 
-    def _upload_resource(self, resource, method=None):
+    def _upload_resource(self, resource, method=None, include_id : bool = True):
         assert hasattr(type(resource), '_url_path')
         assert callable(getattr(resource, '_serialise', None))
 
@@ -513,7 +513,7 @@ class Client(object):
 
         putting = (method == 'PUT')
 
-        resource_json = resource._serialise(include_id=False)
+        resource_json = resource._serialise(include_id=include_id)
         path_parts = [resource.__class__._url_path]
         if putting:
             path_parts.append(resource.id)
